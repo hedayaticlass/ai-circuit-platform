@@ -1,33 +1,39 @@
 # drawer.py
 from schemdraw import Drawing
 import schemdraw.elements as elm
+from io import BytesIO
+from PIL import Image
 
 def render_schematic(components, save_path="schematic.png"):
-    d = Drawing()
+    # رسم مدار
+    d = Drawing(show=False)   # مهم: از show=False استفاده کن
 
     for c in components:
-        t = c["type"]
-        label = f"{c['ref']}\n{c.get('value','')}"
-        if t == "R":
+        t = c["type"].lower()
+        label = f"{c['name']}\n{c['value']}"
+
+        if t in ["r", "resistor"]:
             d.add(elm.Resistor().label(label))
-        elif t == "C":
+        elif t in ["c", "capacitor"]:
             d.add(elm.Capacitor().label(label))
-        elif t == "L":
+        elif t in ["l", "inductor"]:
             d.add(elm.Inductor().label(label))
-        elif t == "V":
+        elif t in ["v", "voltagesource", "voltage"]:
             d.add(elm.SourceV().label(label))
-        elif t == "I":
+        elif t in ["i", "currentsource"]:
             d.add(elm.SourceI().label(label))
-        elif t == "D":
-            d.add(elm.Diode().label(label))
-        elif t == "BJT":
-            d.add(elm.BjtNpn().label(c["ref"]))
-        elif t == "MOS":
-            d.add(elm.MosfetN().label(c["ref"]))
         else:
-            d.add(elm.Dot().label(c["ref"]))
+            d.add(elm.Dot().label(c["name"]))
 
         d.add(elm.Line().right())
 
-    d.save(save_path)
+    # رندر تصویر به صورت PNG در حافظه
+    buf = BytesIO()
+    d.save(buf, format='png')
+    buf.seek(0)
+
+    # ذخیره‌ی PNG
+    img = Image.open(buf)
+    img.save(save_path)
+
     return save_path
