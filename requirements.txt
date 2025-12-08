@@ -3,3 +3,4 @@ gunicorn
 streamlit
 schemdraw
 openai
+cairosvg
