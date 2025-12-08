@@ -4,3 +4,4 @@ streamlit
 schemdraw
 openai
 cairosvg
+matplotlib
