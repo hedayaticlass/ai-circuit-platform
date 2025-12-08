@@ -1,12 +1,11 @@
 # drawer.py
 from schemdraw import Drawing
 import schemdraw.elements as elm
-from io import BytesIO
-from PIL import Image
+from cairosvg import svg2png
 
 def render_schematic(components, save_path="schematic.png"):
-    # رسم مدار
-    d = Drawing(show=False)   # مهم: از show=False استفاده کن
+    # رسم مدار به صورت SVG
+    d = Drawing(show=False)
 
     for c in components:
         t = c["type"].lower()
@@ -27,13 +26,10 @@ def render_schematic(components, save_path="schematic.png"):
 
         d.add(elm.Line().right())
 
-    # رندر تصویر به صورت PNG در حافظه
-    buf = BytesIO()
-    d.save(buf, format='png')
-    buf.seek(0)
+    # ۱. SVG در قالب رشته
+    svg_data = d.get_svg()
 
-    # ذخیره‌ی PNG
-    img = Image.open(buf)
-    img.save(save_path)
+    # ۲. تبدیل SVG → PNG
+    svg2png(bytestring=svg_data.encode("utf-8"), write_to=save_path)
 
     return save_path
