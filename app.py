@@ -8,12 +8,7 @@ SCHEM_PATH = "schematic.png"
 st.set_page_config(page_title="AI Circuit → SPICE → Schematic", layout="wide")
 st.title("AI Circuit → SPICE → Schematic")
 
-# --- Sidebar: در آینده برای Load/Save می‌تونیم کامل کنیم ---
-with st.sidebar:
-    st.header("Info")
-    st.markdown("این نسخه‌ی MVP است: Text → SPICE → Schematic")
-
-# --- انتخاب نوع ورودی ---
+# --- نوع ورودی ---
 mode = st.radio("Input type", ["Text", "Audio"])
 user_text = ""
 
@@ -25,32 +20,30 @@ else:
         user_text = transcribe_audio(audio.read())
         st.write(user_text)
 
-# --- دکمهٔ تولید مدار ---
+# --- تولید مدار ---
 if st.button("Generate"):
     if not user_text.strip():
         st.warning("Please enter a description of the circuit.")
     else:
         out = analyze_text(user_text)
 
-        # out می‌تونه dict یا string باشه
+        # out باید دیکشنری باشد
         if isinstance(out, dict):
             spice = out.get("spice", "")
             components = out.get("components", [])
         else:
-            # اگر JSON درست نیومد، همین رو می‌ذاریم
             spice = str(out)
             components = []
 
         st.session_state["spice"] = spice
         st.session_state["components"] = components
 
-# --- نمایش SPICE خالص ---
+# --- نمایش SPICE فقط به صورت متن ---
 if "spice" in st.session_state and st.session_state["spice"]:
     st.subheader("SPICE Netlist")
-    # اینجا فقط رشته‌ی SPICE چاپ می‌شه، نه JSON
-    st.code(st.session_state["spice"], language="spice")
+    st.code(st.session_state["spice"], language="text")
 
-# --- نمایش JSON components برای دیباگ (اختیاری) ---
+# --- نمایش JSON برای دیباگ ---
 with st.expander("Components JSON (debug)"):
     if "components" in st.session_state:
         st.json(st.session_state["components"])
