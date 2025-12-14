@@ -14,7 +14,8 @@ API_KEY = os.environ.get("OPENROUTER_API_KEY")
 #    (اینجا خودت کلید را می‌گذاری)
 # ------------------------------
 if not API_KEY:
-    API_KEY = "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"   # ← کلید OpenRouter خودت را اینجا بگذار
+	raise
+    RuntimeError("API KEY is not set")
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",

@@ -1,2 +1,0 @@
-openrouter key-1
-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
