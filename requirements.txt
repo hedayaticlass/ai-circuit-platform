@@ -5,3 +5,5 @@ schemdraw
 openai
 cairosvg
 matplotlib
+pandas
+python-dotenv
