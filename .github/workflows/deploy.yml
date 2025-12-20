@@ -19,5 +19,5 @@ jobs:
             cd /opt/apps/ai-circuit-platform
             git pull origin main
             /opt/apps/ai-circuit-platform/.venv/bin/pip install -r requirements.txt
-            sudo systemctl restart ai-circuit
+            sudo systemctl restart ai-circuit  
             sudo systemctl status ai-circuit --no-pager
