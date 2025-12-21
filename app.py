@@ -3,197 +3,172 @@ import streamlit as st
 import pandas as pd
 import re
 import io
+import numpy as np
 from dotenv import load_dotenv
 from api_client import analyze_text, transcribe_audio
 from drawer import render_schematic
 from utils import run_ngspice_simulation
+from parser import get_netlist_info
 
-# بارگذاری تنظیمات
 load_dotenv()
-
 SCHEM_PATH = "schematic.png"
 st.set_page_config(page_title="AI Circuit → SPICE → Schematic", layout="wide")
 
-# ==========================================
-# 1. توابع کمکی (بدون تغییر در ظاهر سایت)
-# ==========================================
-
-def remove_simulation_commands(spice_code):
-    """دستورات تحلیل قدیمی را حذف می‌کند تا دستور جدید کاربر جایگزین شود."""
+def clean_base_spice(spice_code):
+    """حذف دستورات شبیه‌سازی برای تولید نت‌لیست پایه"""
     if not spice_code: return ""
     lines = spice_code.split('\n')
     clean_lines = []
-    skip_block = False
+    skip = False
     for line in lines:
         s = line.strip().lower()
-        if s.startswith(".control"): skip_block = True; continue
-        if s.startswith(".endc"): skip_block = False; continue
-        if skip_block: continue
-        if s.startswith((".tran", ".op", ".dc", ".ac", ".print", ".plot", ".end")): continue
-        clean_lines.append(line)
+        if s.startswith(".control"): skip = True; continue
+        if s.startswith(".endc"): skip = False; continue
+        if skip or s.startswith((".tran", ".op", ".dc", ".ac", ".print", ".plot", ".end", ".title")): continue
+        if line.strip(): clean_lines.append(line)
     return "\n".join(clean_lines)
 
-def parse_ngspice_output(raw_output):
-    """خروجی را تمیز کرده و متغیرهای اضافی سیستم را حذف می‌کند."""
-    data = {"type": "text", "content": raw_output}
-    IGNORE_LIST = ["TEMP", "TNOM", "size", "available", "seconds", "elapsed", "DRAM", "Initialization"]
-
-    # استخراج اعداد (DC/OP)
-    scalar_pattern = re.findall(r"(\w+\(?\w*\)?)\s*=\s*([+-]?\d+\.?\d*e?[+-]?\d*)", raw_output)
-    if scalar_pattern:
-        filtered = [(n, v) for n, v in scalar_pattern if not any(ig.lower() in n.lower() for ig in IGNORE_LIST)]
-        if filtered:
-            data["type"] = "scalars"
-            data["values"] = filtered
-            return data
-
-    # استخراج نمودار (Transient/AC)
-    if "Index" in raw_output and ("time" in raw_output or "frequency" in raw_output or "v-sweep" in raw_output):
+def parse_output(raw):
+    """پردازش خروجی ngspice و جداسازی داده‌های متنی و گرافیکی"""
+    # ۱. پردازش جداول (Transient, DC Sweep, AC Sweep)
+    if "Index" in raw:
         try:
-            lines = raw_output.split('\n')
-            start_idx = next(i for i, line in enumerate(lines) if "Index" in line)
-            table_lines = [re.sub(r"\s+", ",", l.strip()) for l in lines[start_idx:] if l.strip() and not l.startswith(("---", "Warning"))]
-            df = pd.read_csv(io.StringIO("\n".join(table_lines)))
-            data["type"] = "plot"
-            data["df"] = df
-            return data
+            lines = raw.split('\n')
+            idx = next(i for i, l in enumerate(lines) if "Index" in l)
+            data_lines = [re.sub(r"\s+", ",", l.strip()) for l in lines[idx:] if l.strip() and not l.startswith(("-", "Warning"))]
+            df = pd.read_csv(io.StringIO("\n".join(data_lines)))
+            # پاکسازی اعداد مختلط در صورت وجود (تحلیل AC)
+            for col in df.columns:
+                if df[col].dtype == object:
+                    df[col] = df[col].apply(lambda x: float(str(x).split(',')[0]) if ',' in str(x) else x)
+            return {"type": "plot", "df": df}
         except: pass
-    return data
 
-# ==========================================
-# 2. رابط کاربری (دقیقاً با معماری قبلی)
-# ==========================================
+    # ۲. پردازش مقادیر ثابت (DC OP) با حذف نویزهای سیستمی
+    pairs = re.findall(r"([a-zA-Z0-9_#\(\)@\[\]]+)[\s]*[=]?[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw)
+    FORBIDDEN = ["temp", "tnom", "available", "size", "seconds", "elapsed", "dram", "initialization", "index", 
+                 "tc1", "tc2", "tce", "defw", "kf", "af", "bv_max", "lf", "wf", "ef", "ac", "dtemp", "noisy", 
+                 "portnum", "zo", "pwr", "phase", "rsh", "narrow", "short", "device", "model", "resistance"]
+    
+    filtered = []
+    seen = set()
+    for n, v in pairs:
+        name_lower = n.lower().strip()
+        is_circuit_var = any([name_lower.startswith('v('), 'branch' in name_lower, name_lower.startswith('@'), re.match(r'^[0-9]+$', name_lower)])
+        if is_circuit_var or (not any(fb in name_lower for fb in FORBIDDEN) and len(n) < 10):
+            if name_lower not in seen:
+                filtered.append([n, v])
+                seen.add(name_lower)
+    
+    if filtered: return {"type": "scalars", "values": filtered}
+    return {"type": "text", "content": raw}
 
+# --- ساختار ظاهری مطابق PDF ---
 st.title("AI Circuit → SPICE → Schematic")
 
-# --- بخش ورودی (مثل قبل) ---
 mode = st.radio("Input type", ["Text", "Audio"])
-user_text = ""
+user_input = ""
 
 if mode == "Text":
-    user_text = st.text_area("Describe the circuit", height=120)
+    user_input = st.text_area("Describe the circuit", height=120)
 else:
-    audio = st.file_uploader("Upload audio", type=["wav", "mp3", "m4a"])
+    audio = st.file_uploader("Upload audio", type=["wav", "mp3"])
     if audio and st.button("Transcribe"):
-        user_text = transcribe_audio(audio.read())
-        st.write(user_text)
+        user_input = transcribe_audio(audio.read())
 
-# --- دکمه تولید (مثل قبل) ---
 if st.button("Generate"):
-    if not user_text.strip():
-        st.warning("Please enter a description.")
-    else:
-        out = analyze_text(user_text)
-        if isinstance(out, dict):
-            st.session_state["spice"] = out.get("spice", "")
+    if user_input:
+        with st.spinner("AI is designing..."):
+            out = analyze_text(user_input)
+            st.session_state["raw_spice"] = clean_base_spice(out.get("spice", ""))
             st.session_state["components"] = out.get("components", [])
-        else:
-            st.session_state["spice"] = str(out)
-            st.session_state["components"] = []
 
-# --- نمایش خروجی‌ها (به ترتیب زیر هم) ---
-if "spice" in st.session_state and st.session_state["spice"]:
+if "raw_spice" in st.session_state:
     st.subheader("SPICE Netlist")
-    st.code(st.session_state["spice"], language="text")
+    st.code(st.session_state["raw_spice"], language="text")
 
     with st.expander("Components JSON (debug)"):
-        if "components" in st.session_state:
-            st.json(st.session_state["components"])
+        st.json(st.session_state["components"])
 
-if "components" in st.session_state and st.session_state["components"]:
-    try:
-        img_path = render_schematic(st.session_state["components"], save_path=SCHEM_PATH)
+    if st.session_state["components"]:
         st.subheader("Schematic")
-        st.image(img_path, caption="Auto-generated schematic")
-    except Exception as e:
-        st.error(f"Error in drawing schematic: {e}")
+        try:
+            img_path = render_schematic(st.session_state["components"], save_path=SCHEM_PATH)
+            st.image(img_path, caption="Auto-generated schematic")
+        except: pass
 
-# ==========================================
-# 3. کنسول شبیه‌سازی (پایین صفحه)
-# ==========================================
-if "spice" in st.session_state and st.session_state["spice"]:
+if "raw_spice" in st.session_state:
     st.markdown("---")
-    st.header("🛠 Simulation Console")
+    st.header("Simulation Console")
     
-    # تنظیمات تحلیل
-    with st.container():
-        sim_type = st.radio("Analysis Type:", ["Transient (Time Domain)", "DC Operating Point", "DC Sweep", "AC Sweep"], horizontal=True)
-        
+    nodes, elements = get_netlist_info(st.session_state["raw_spice"])
+    sim_type = st.radio("Analysis Type:", ["Transient (Time Domain)", "DC Operating Point", "DC Sweep", "AC Sweep"], horizontal=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("**Settings:**")
         params = {}
-        c1, c2, c3 = st.columns(3)
-        
         if "Transient" in sim_type:
-            with c1: params["step"] = st.text_input("Time Step", "1ms")
-            with c2: params["stop"] = st.text_input("Stop Time", "100ms")
-            with c3: params["uic"] = st.checkbox("Use Initial Conditions", False)
+            params['step'] = st.text_input("Step", "1ms")
+            params['stop'] = st.text_input("Stop", "10ms")
         elif "DC Sweep" in sim_type:
-            with c1: params["source"] = st.text_input("Source", "V1")
-            with c2: params["start"] = st.text_input("Start", "0")
-            with c3: params["stop"] = st.text_input("Stop", "10"); params["step"] = st.text_input("Step", "1")
+            srcs = [e for e in elements if e.upper().startswith(('V', 'I'))]
+            params['src'] = st.selectbox("Source", srcs if srcs else ["V1"])
+            params['start'], params['stop'], params['step'] = st.text_input("Start", "0"), st.text_input("Stop", "10"), st.text_input("Step", "1")
         elif "AC Sweep" in sim_type:
-            with c1: params["points"] = st.text_input("Points", "10")
-            with c2: params["fstart"] = st.text_input("Start Freq", "1Hz")
-            with c3: params["fstop"] = st.text_input("Stop Freq", "1MHz")
+            params['pts'], params['fstart'], params['fstop'] = st.text_input("Pts/Dec", "10"), st.text_input("Start", "10"), st.text_input("Stop", "1Meg")
 
-        plot_var = st.text_input("Plot Variable", "V(out)")
+    with col2:
+        st.write("**Variables:**")
+        sel_nodes = st.multiselect("Voltages (V)", nodes)
+        sel_elements = st.multiselect("Currents (I)", elements)
 
-    # دکمه اجرای نهایی (با اصلاحات فنی مخفی)
+    # ساخت فرمان‌های پرینت برای تحلیل‌های مختلف
+    v_cmds = [f"v({n})" for n in sel_nodes]
+    i_cmds = [f"i({e})" if e.upper().startswith('V') else f"@{e}[i]" for e in sel_elements]
+    
+    if "AC Sweep" in sim_type and sel_nodes:
+        ac_cmds = []
+        for n in sel_nodes: ac_cmds.extend([f"vm({n})", f"vp({n})"])
+        print_cmd = "print " + " ".join(ac_cmds)
+    else:
+        print_cmd = "print " + (" ".join(v_cmds + i_cmds) if (v_cmds or i_cmds) else "all")
+    
+    ctrl = [".control", "run", print_cmd, ".endc", ".end"]
+    analysis = ""
+    if "DC Operating Point" in sim_type: analysis = ".op"
+    elif "Transient" in sim_type: analysis = f".tran {params.get('step','1m')} {params.get('stop','10m')}"
+    elif "DC Sweep" in sim_type: analysis = f".dc {params.get('src','V1')} {params.get('start','0')} {params.get('stop','10')} {params.get('step','1')}"
+    elif "AC Sweep" in sim_type: analysis = f".ac dec {params.get('pts','10')} {params.get('fstart','10')} {params.get('fstop','1Meg')}"
+    
+    final_cir = f"* Final Simulation File\n{st.session_state['raw_spice']}\n{analysis}\n" + "\n".join(ctrl)
+
+    with st.expander("Show Final Netlist"):
+        st.code(final_cir, language="spice")
+
     if st.button("Run Simulation 🚀"):
-        with st.spinner("Running..."):
-            # 1. تمیزکاری کد
-            base_spice = remove_simulation_commands(st.session_state["spice"])
+        with st.spinner("Simulating..."):
+            raw_res = run_ngspice_simulation(final_cir)
+            res = parse_output(raw_res)
             
-            # 2. حل مشکل خط اول (Title Fix)
-            if not base_spice.strip().startswith("*"):
-                base_spice = "* AI Simulation\n" + base_spice
-
-            # 3. ساخت دستورات
-            analysis_cmd = ""
-            control_cmds = [".control", "run"]
-            
-            if "Transient" in sim_type:
-                uic = " uic" if params.get("uic") else ""
-                analysis_cmd = f".tran {params['step']} {params['stop']}{uic}"
-                control_cmds.append(f"print {plot_var}")
-            elif "Operating Point" in sim_type:
-                analysis_cmd = ".op"
-                control_cmds.append("print all")
-            elif "DC Sweep" in sim_type:
-                analysis_cmd = f".dc {params['source']} {params['start']} {params['stop']} {params.get('step','1')}"
-                control_cmds.append(f"print {plot_var}")
-            elif "AC Sweep" in sim_type:
-                analysis_cmd = f".ac dec {params['points']} {params['fstart']} {params['fstop']}"
-                control_cmds.append(f"print {plot_var}")
-
-            control_cmds.append(".endc")
-            control_cmds.append(".end")
-            
-            # ترکیب نهایی
-            final_netlist = f"{base_spice}\n{analysis_cmd}\n" + "\n".join(control_cmds)
-            
-            # نمایش کد نهایی برای دیباگ
-            with st.expander("Show Final Netlist"):
-                st.code(final_netlist, language="spice")
-
-            # اجرا
-            res = run_ngspice_simulation(final_netlist)
-            parsed = parse_ngspice_output(res)
-
-            # نمایش نتیجه
-            if parsed["type"] == "scalars":
-                st.success("Result (DC):")
-                cols = st.columns(4)
-                for i, (k, v) in enumerate(parsed["values"]):
-                    cols[i%4].metric(k, v)
-            elif parsed["type"] == "plot":
-                st.success("Result (Plot):")
-                df = parsed["df"]
-                # تنظیم محور X
-                x_col = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), None)
-                if x_col:
-                    st.line_chart(df.set_index(x_col).drop(columns=["Index"], errors="ignore"))
+            if res["type"] == "scalars":
+                st.subheader("Result (DC):")
+                st.table(pd.DataFrame(res["values"], columns=["Variable", "Value"]))
+            elif res["type"] == "plot":
+                st.subheader("Result (Plot):")
+                df = res["df"]
+                # انتخاب محور افقی بر اساس نوع تحلیل
+                x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
+                
+                if "AC Sweep" in sim_type:
+                    mag_cols = [c for c in df.columns if "vm(" in c.lower()]
+                    ph_cols = [c for c in df.columns if "vp(" in c.lower()]
+                    st.write("### Magnitude (dB)")
+                    st.line_chart(df.set_index(x_axis)[mag_cols])
+                    st.write("### Phase (Degrees)")
+                    st.line_chart(df.set_index(x_axis)[ph_cols])
                 else:
-                    st.dataframe(df)
+                    # رسم نمودار برای Transient و DC Sweep
+                    st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
             else:
-                if "Error" in res: st.error("Simulation Failed")
-                st.text_area("Log", res, height=200)
+                st.text_area("Full Output Log", raw_res, height=200)
