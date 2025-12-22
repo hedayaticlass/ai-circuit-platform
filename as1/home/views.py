@@ -14,25 +14,8 @@ import sys
 from .models import ChatSession, ChatMessage, UserProfile
 from django.contrib.auth.models import User
 
-# This SESSION_DIR and related helper functions are no longer used for chat
-# but might be used by other parts of the app, so keeping them for now.
-SESSION_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sessions")
-os.makedirs(SESSION_DIR, exist_ok=True)
-
-def _get_session_file(session_id):
-    return os.path.join(SESSION_DIR, f"{session_id}.json")
-
-def _load_session(session_id):
-    path = _get_session_file(session_id)
-    if os.path.exists(path):
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {"messages": [], "displayName": "چت جدید", "lastMessage": time.time()}
-
-def _save_session(session_id, session_data):
-    path = _get_session_file(session_id)
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(session_data, f, ensure_ascii=False, indent=2)
+# Chat history is now stored in database using Django models
+# No need for file-based session storage
 
 # اطمینان از اینکه stdout به UTF-8 تنظیم شده
 try:
