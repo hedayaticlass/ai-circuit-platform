@@ -5,3 +5,7 @@ schemdraw
 openai
 cairosvg
 matplotlib
+django-jalali
+django-extensions
+djangorestframework
+django-cors-headers
