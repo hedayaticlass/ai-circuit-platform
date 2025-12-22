@@ -79,7 +79,7 @@ def parse_output(raw):
     return {"type": "text", "content": raw}
 
 # ==========================================
-# رابط کاربری 
+#  رابط کاربری 
 # ==========================================
 
 st.title("AI Circuit → SPICE → Schematic")
