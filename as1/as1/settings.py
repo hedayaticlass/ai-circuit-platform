@@ -89,7 +89,7 @@ WSGI_APPLICATION = 'as1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': '/opt/apps/ai-circuit-platform/as1/db.sqlite3',
     }
 }
 
