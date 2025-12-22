@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'as1.home',
+    'home',
     'django_jalali',
     'django_extensions',
     'rest_framework',
