@@ -27,8 +27,7 @@ SECRET_KEY = 'django-insecure-$!^5vlt3_3^s-65mvd^w6ny#&sj4i6k1co2xtdqw(@p5xe#+$i
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ['kafshkabir.ir', 'www.kafshkabir.ir',  '127.0.0.1', 'localhost', 'kafshkabirqom.serveo.net',
-                 'kiiwk3efy6y2.connect.remote.it']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '81.161.229.37']
 
 
 # Application definition
