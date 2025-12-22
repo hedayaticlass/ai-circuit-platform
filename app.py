@@ -29,43 +29,62 @@ def clean_base_spice(spice_code):
     return "\n".join(clean_lines)
 
 def parse_output(raw):
-    """پردازش خروجی ngspice و جداسازی داده‌های متنی و گرافیکی"""
-    # ۱. پردازش جداول (Transient, DC Sweep, AC Sweep)
+    """
+    پردازش خروجی ngspice و استخراج فقط ولتاژ گره‌ها و جریان شاخه‌ها.
+    این تابع نویزهای سیستمی و پارامترهای مدل را کاملاً حذف می‌کند.
+    """
+    # ۱. شناسایی داده‌های جدولی (Transient, DC Sweep, AC Sweep)
     if "Index" in raw:
         try:
             lines = raw.split('\n')
             idx = next(i for i, l in enumerate(lines) if "Index" in l)
             data_lines = [re.sub(r"\s+", ",", l.strip()) for l in lines[idx:] if l.strip() and not l.startswith(("-", "Warning"))]
             df = pd.read_csv(io.StringIO("\n".join(data_lines)))
-            # پاکسازی اعداد مختلط در صورت وجود (تحلیل AC)
             for col in df.columns:
                 if df[col].dtype == object:
                     df[col] = df[col].apply(lambda x: float(str(x).split(',')[0]) if ',' in str(x) else x)
             return {"type": "plot", "df": df}
         except: pass
 
-    # ۲. پردازش مقادیر ثابت (DC OP) با حذف نویزهای سیستمی
+    # ۲. پردازش مقادیر ثابت (DC OP) با فیلتر Whitelist (فقط موارد مدار)
+    # استخراج تمام الگوهای "نام مقدار" یا "نام = مقدار"
     pairs = re.findall(r"([a-zA-Z0-9_#\(\)@\[\]]+)[\s]*[=]?[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw)
+    if not pairs:
+        pairs = re.findall(r"^[\s]*([a-zA-Z0-9_#\(\)]+)[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw, re.MULTILINE)
+
+    # کلمات سیستمی و پارامترهای داخلی که باید حذف شوند
     FORBIDDEN = ["temp", "tnom", "available", "size", "seconds", "elapsed", "dram", "initialization", "index", 
                  "tc1", "tc2", "tce", "defw", "kf", "af", "bv_max", "lf", "wf", "ef", "ac", "dtemp", "noisy", 
-                 "portnum", "zo", "pwr", "phase", "rsh", "narrow", "short", "device", "model", "resistance"]
+                 "portnum", "zo", "pwr", "phase", "rsh", "narrow", "short", "device", "model", "resistance", "sparse"]
     
     filtered = []
     seen = set()
     for n, v in pairs:
         name_lower = n.lower().strip()
-        is_circuit_var = any([name_lower.startswith('v('), 'branch' in name_lower, name_lower.startswith('@'), re.match(r'^[0-9]+$', name_lower)])
-        if is_circuit_var or (not any(fb in name_lower for fb in FORBIDDEN) and len(n) < 10):
+        # فقط ولتاژ گره‌ها، جریان شاخه‌ها و متغیرهای تعریف شده توسط کاربر
+        is_node_volt = name_lower.startswith('v(') or re.match(r'^[0-9]+$', name_lower) or name_lower in ["in", "out"]
+        is_branch_curr = '#branch' in name_lower or (name_lower.startswith('@') and '[i]' in name_lower)
+        
+        if (is_node_volt or is_branch_curr) and name_lower not in FORBIDDEN:
             if name_lower not in seen:
-                filtered.append([n, v])
+                # برای زیبایی، اگر گره عددی یا نامی ساده است، آن را به فرم V(node) نمایش می‌دهیم
+                display_name = n
+                if (re.match(r'^[0-9]+$', name_lower) or name_lower in ["in", "out"]) and not is_branch_curr:
+                    display_name = f"V({n})"
+                
+                filtered.append([display_name, v])
                 seen.add(name_lower)
     
     if filtered: return {"type": "scalars", "values": filtered}
     return {"type": "text", "content": raw}
 
-# --- ساختار ظاهری مطابق PDF ---
+# ==========================================
+# ۳. رابط کاربری (مطابق دقیق با ساختار PDF)
+# ==========================================
+
 st.title("AI Circuit → SPICE → Schematic")
 
+# بخش ورودی (صفحه ۱ PDF)
 mode = st.radio("Input type", ["Text", "Audio"])
 user_input = ""
 
@@ -83,6 +102,7 @@ if st.button("Generate"):
             st.session_state["raw_spice"] = clean_base_spice(out.get("spice", ""))
             st.session_state["components"] = out.get("components", [])
 
+# نمایش نت‌لیست و شماتیک (صفحه ۱ PDF)
 if "raw_spice" in st.session_state:
     st.subheader("SPICE Netlist")
     st.code(st.session_state["raw_spice"], language="text")
@@ -97,6 +117,7 @@ if "raw_spice" in st.session_state:
             st.image(img_path, caption="Auto-generated schematic")
         except: pass
 
+# کنسول شبیه‌سازی (صفحه ۲ PDF)
 if "raw_spice" in st.session_state:
     st.markdown("---")
     st.header("Simulation Console")
@@ -123,7 +144,7 @@ if "raw_spice" in st.session_state:
         sel_nodes = st.multiselect("Voltages (V)", nodes)
         sel_elements = st.multiselect("Currents (I)", elements)
 
-    # ساخت فرمان‌های پرینت برای تحلیل‌های مختلف
+    # ساخت دستور پرینت
     v_cmds = [f"v({n})" for n in sel_nodes]
     i_cmds = [f"i({e})" if e.upper().startswith('V') else f"@{e}[i]" for e in sel_elements]
     
@@ -153,11 +174,11 @@ if "raw_spice" in st.session_state:
             
             if res["type"] == "scalars":
                 st.subheader("Result (DC):")
+                # نمایش جدول تمیز با دو ستون متغیر و مقدار (مشابه PDF)
                 st.table(pd.DataFrame(res["values"], columns=["Variable", "Value"]))
             elif res["type"] == "plot":
                 st.subheader("Result (Plot):")
                 df = res["df"]
-                # انتخاب محور افقی بر اساس نوع تحلیل
                 x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
                 
                 if "AC Sweep" in sim_type:
@@ -168,7 +189,6 @@ if "raw_spice" in st.session_state:
                     st.write("### Phase (Degrees)")
                     st.line_chart(df.set_index(x_axis)[ph_cols])
                 else:
-                    # رسم نمودار برای Transient و DC Sweep
                     st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
             else:
                 st.text_area("Full Output Log", raw_res, height=200)
