@@ -79,12 +79,12 @@ def parse_output(raw):
     return {"type": "text", "content": raw}
 
 # ==========================================
-# ۳. رابط کاربری (مطابق دقیق با ساختار PDF)
+# ۳. رابط کاربری 
 # ==========================================
 
 st.title("AI Circuit → SPICE → Schematic")
 
-# بخش ورودی (صفحه ۱ PDF)
+# بخش ورودی 
 mode = st.radio("Input type", ["Text", "Audio"])
 user_input = ""
 
@@ -102,7 +102,7 @@ if st.button("Generate"):
             st.session_state["raw_spice"] = clean_base_spice(out.get("spice", ""))
             st.session_state["components"] = out.get("components", [])
 
-# نمایش نت‌لیست و شماتیک (صفحه ۱ PDF)
+# نمایش نت‌لیست و شماتیک 
 if "raw_spice" in st.session_state:
     st.subheader("SPICE Netlist")
     st.code(st.session_state["raw_spice"], language="text")
@@ -117,7 +117,7 @@ if "raw_spice" in st.session_state:
             st.image(img_path, caption="Auto-generated schematic")
         except: pass
 
-# کنسول شبیه‌سازی (صفحه ۲ PDF)
+# کنسول شبیه‌سازی 
 if "raw_spice" in st.session_state:
     st.markdown("---")
     st.header("Simulation Console")
@@ -174,7 +174,7 @@ if "raw_spice" in st.session_state:
             
             if res["type"] == "scalars":
                 st.subheader("Result (DC):")
-                # نمایش جدول تمیز با دو ستون متغیر و مقدار (مشابه PDF)
+                # نمایش جدول تمیز با دو ستون متغیر و مقدار 
                 st.table(pd.DataFrame(res["values"], columns=["Variable", "Value"]))
             elif res["type"] == "plot":
                 st.subheader("Result (Plot):")

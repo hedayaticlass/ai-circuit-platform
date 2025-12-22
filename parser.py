@@ -1,14 +1,14 @@
 # parser.py
-import re
 
 def get_netlist_info(spice_text):
-    """استخراج گره‌ها و قطعات برای کنسول شبیه‌سازی"""
+    """استخراج گره‌ها و نام قطعات برای استفاده در لیست‌های انتخابی UI"""
     nodes = set()
     elements = []
     lines = spice_text.splitlines()
     for line in lines:
         line = line.strip()
         if not line or line.startswith(('*', '.', 'v', 'V', 'i', 'I')) and len(line.split()) < 3:
+            # اگر خط با نام قطعه شروع شود اما دستور نباشد
             if line and line[0].upper() in 'RVLCIQDM':
                 parts = line.split()
                 if len(parts) > 0: elements.append(parts[0])
@@ -25,12 +25,19 @@ def get_netlist_info(spice_text):
     return sorted(list(nodes)), sorted(list(elements))
 
 def parse_netlist(text):
-    """تجزیه برای رسم شماتیک"""
+    """تجزیه نت‌لیست برای رسم شماتیک"""
     comps = []
     for line in text.splitlines():
         line = line.strip()
-        if not line or line.startswith(('.', '*')): continue
+        if not line or line.startswith(('.', '*')):
+            continue
         p = line.split()
-        if len(p) < 3: continue
-        comps.append({"ref": p[0], "type": p[0][0].upper(), "nodes": p[1:3], "value": p[3] if len(p)>3 else ""})
+        name = p[0]
+        t = name[0].upper()
+        if t in ['R','C','L','V','I']:
+            comps.append({"ref": name, "type": t, "value": p[3] if len(p)>3 else "", "nodes": [p[1], p[2]]})
+        elif t == 'D':
+            comps.append({"ref": name, "type": "D", "nodes": [p[1], p[2]]})
+        elif t in ['Q', 'M']:
+            comps.append({"ref": name, "type": t, "nodes": p[1:4]})
     return comps
