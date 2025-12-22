@@ -15,9 +15,7 @@ from .models import ChatSession, ChatMessage, UserProfile
 from django.contrib.auth.models import User
 
 # This SESSION_DIR and related helper functions are no longer used for chat
-# but might be used by other parts of the app, so keeping them for now.
-SESSION_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sessions")
-os.makedirs(SESSION_DIR, exist_ok=True)
+# Removed SESSION_DIR creation to fix permission issues
 
 def _get_session_file(session_id):
     return os.path.join(SESSION_DIR, f"{session_id}.json")
