@@ -79,7 +79,7 @@ def parse_output(raw):
     return {"type": "text", "content": raw}
 
 # ==========================================
-# ۳. رابط کاربری 
+# رابط کاربری 
 # ==========================================
 
 st.title("AI Circuit → SPICE → Schematic")
@@ -191,4 +191,4 @@ if "raw_spice" in st.session_state:
                 else:
                     st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
             else:
-                st.text_area("Full Output Log", raw_res, height=200)
+                st.text_area("Full Output Log", raw_res, height=200) 
