@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Circuit Generator | تولید مدار هوشمند</title>
+    <link rel="stylesheet" href="/staticfiles/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      html, body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch; /* اسکرول روان در iOS */
+      }
+
+      /* تنظیمات اسکرول برای وب‌کیت (Safari, Chrome, Edge) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1); /* Darker track */
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.4); /* Darker thumb */
+        border-radius: 4px;
+        transition: background 0.3s ease;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.6); /* Slightly lighter on hover */
+      }
+
+      /* تنظیمات اسکرول برای Firefox */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.1); /* Darker colors */
+      }
+
+      .landing-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-black);
+      }
+
+      .landing-header {
+        padding: 0.7rem 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        background: rgba(10, 10, 10, 0.8);
+        border-bottom: 1px solid var(--stroke);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+      }
+
+      .landing-logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .landing-logo-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--stroke);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        backdrop-filter: blur(10px);
+      }
+
+      .landing-logo h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--white);
+        margin: 0;
+      }
+
+      .landing-nav {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .btn-landing {
+        background: transparent;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--stroke);
+        border-radius: 10px;
+        color: var(--white-80);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        padding: 1px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      .btn-landing:hover {
+        background: rgba(255, 255, 255, 0.01);
+        border-color: var(--stroke-hover);
+        color: var(--white);
+        transform: translateY(-1px);
+      }
+
+      .hero-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8rem 2rem 4rem;
+        text-align: center;
+        position: relative;
+      }
+
+      .hero-content {
+        max-width: 800px;
+        z-index: 2;
+      }
+
+      .hero-title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        letter-spacing: -1px;
+      }
+
+      .hero-subtitle {
+        font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+        color: var(--white-70);
+        margin-bottom: 3rem;
+        line-height: 1.6;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 4rem;
+      }
+
+      .btn-primary {
+        background: var(--white-10);
+        border: 1px solid var(--white-30);
+        color: var(--white);
+        padding: 16px 32px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary:hover {
+        background: var(--white-20);
+        border-color: var(--white-50);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--stroke);
+        color: var(--white-80);
+        padding: 16px 32px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--stroke-hover);
+        color: var(--white);
+        transform: translateY(-1px);
+      }
+
+      .features-section {
+        padding: 6rem 2rem;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .features-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .features-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 3rem;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+
+      .feature-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--stroke-hover);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .feature-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem;
+        color: var(--white-60);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .feature-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 1rem;
+      }
+
+      .feature-description {
+        color: var(--white-70);
+        line-height: 1.6;
+      }
+
+      .examples-section {
+        padding: 6rem 2rem;
+        background: var(--bg-black);
+      }
+
+      .examples-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .examples-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 3rem;
+      }
+
+      .examples-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+      }
+
+      .example-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .example-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--stroke-hover);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .example-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 1rem;
+        color: var(--white-60);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .example-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 0.5rem;
+      }
+
+      .example-description {
+        font-size: 0.9rem;
+        color: var(--white-60);
+      }
+
+      .cta-section {
+        padding: 6rem 2rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+        text-align: center;
+      }
+
+      .cta-content {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .cta-title {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 1.5rem;
+      }
+
+      .cta-subtitle {
+        font-size: 1.2rem;
+        color: var(--white-70);
+        margin-bottom: 3rem;
+        line-height: 1.6;
+      }
+
+      .landing-footer {
+        padding: 2rem;
+        text-align: center;
+        background: rgba(10, 10, 10, 0.8);
+        border-top: 1px solid var(--stroke);
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .footer-text {
+        color: var(--white-60);
+        font-size: 0.9rem;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .footer-link {
+        color: var(--white-60);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+      }
+
+      .footer-link:hover {
+        color: var(--white);
+      }
+
+      /* Floating animation for hero icons */
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+
+      .hero-icon-large {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 2rem;
+        color: var(--white-60);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      /* Background decorations */
+      .bg-decoration-1,
+      .bg-decoration-2,
+      .bg-decoration-3 {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      .bg-decoration-1 {
+        width: 300px;
+        height: 300px;
+        top: 10%;
+        left: 10%;
+        animation: float 4s ease-in-out infinite;
+      }
+
+      .bg-decoration-2 {
+        width: 200px;
+        height: 200px;
+        top: 60%;
+        right: 10%;
+        animation: float 5s ease-in-out infinite reverse;
+      }
+
+      .bg-decoration-3 {
+        width: 150px;
+        height: 150px;
+        bottom: 20%;
+        left: 20%;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      /* تنظیمات اسکرول برای تمام عناصر */
+      .features-section,
+      .examples-section,
+      .cta-section {
+        scroll-margin-top: 80px; /* جلوگیری از پنهان شدن پشت هدر */
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .landing-container {
+        }
+
+        .landing-header {
+          padding: 1.5rem 1rem;
+        }
+
+        .hero-section {
+          padding: 6rem 1rem 2rem;
+          min-height: 100vh;
+        }
+
+        .hero-buttons {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .features-section,
+        .examples-section,
+        .cta-section {
+          padding: 4rem 1rem;
+        }
+
+        .footer-content {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .footer-links {
+          justify-content: center;
+        }
+      }
+
+      /* تنظیمات مخصوص تبلت */
+      @media (max-width: 1024px) and (min-width: 769px) {
+        .landing-container {
+        }
+      }
+
+      /* تنظیمات مخصوص موبایل کوچک */
+      @media (max-width: 480px) {
+        .landing-container {
+        }
+
+        .hero-section {
+          padding: 5rem 1rem 1rem;
+          min-height: 100vh;
+        }
+
+        .features-section,
+        .examples-section,
+        .cta-section {
+          padding: 3rem 1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-title {
+          font-size: 2rem;
+        }
+
+        .features-title,
+        .examples-title,
+        .cta-title {
+          font-size: 2rem;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="landing-container">
+      <!-- Header -->
+      <header class="landing-header">
+        <div class="landing-logo">
+          <div class="landing-logo-icon">⚡</div>
+          <h1>Circuit AI</h1>
+        </div>
+        <nav class="landing-nav">
+          <a href="#features" class="btn-landing">ویژگی‌ها</a>
+          <a href="#examples" class="btn-landing">نمونه‌ها</a>
+          <a href="{% url 'login' %}" class="btn-landing">ورود</a>
+          <a href="{% url 'signup' %}" class="btn-primary">شروع کنید</a>
+        </nav>
+      </header>
+
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="bg-decoration-1"></div>
+        <div class="bg-decoration-2"></div>
+        <div class="bg-decoration-3"></div>
+
+        <div class="hero-content">
+          <div class="hero-icon-large">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+            </svg>
+          </div>
+          <h1 class="hero-title">مدار خود را با هوش مصنوعی طراحی کنید</h1>
+          <p class="hero-subtitle">
+            توضیح مدار الکتریکی خود را به زبان فارسی بنویسید و هوش مصنوعی پیشرفته ما کد کامل پایتون، شبیه‌سازی SPICE و تصویر مدار را برای شما تولید کند.
+          </p>
+          <div class="hero-buttons">
+            <a href="{% url 'signup' %}" class="btn-primary">همین حالا شروع کنید</a>
+            <a href="#features" class="btn-secondary">بیشتر بدانید</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section id="features" class="features-section">
+        <div class="features-container">
+          <h2 class="features-title">چرا Circuit AI؟</h2>
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-4"></path>
+                  <path d="M9 11V9a3 3 0 0 1 6 0v2"></path>
+                  <circle cx="12" cy="16" r="1"></circle>
+                </svg>
+              </div>
+              <h3 class="feature-title">پردازش هوشمند</h3>
+              <p class="feature-description">
+                هوش مصنوعی پیشرفته ما توضیحات فارسی شما را درک کرده و مدارهای پیچیده را به کد قابل اجرا تبدیل می‌کند.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="9" cy="9" r="2"></circle>
+                  <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title">تصویرسازی مدار</h3>
+              <p class="feature-description">
+                تولید خودکار تصاویر دقیق و حرفه‌ای از مدارهای شما با استفاده از کتابخانه‌های گرافیکی پیشرفته پایتون.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="16 18 22 12 16 6"></polyline>
+                  <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+              </div>
+              <h3 class="feature-title">شبیه‌سازی SPICE</h3>
+              <p class="feature-description">
+                تولید کد netlist استاندارد SPICE برای شبیه‌سازی دقیق عملکرد مدار در نرم‌افزارهای مهندسی.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14,2 14,8 20,8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10,9 9,9 8,9"></polyline>
+                </svg>
+              </div>
+              <h3 class="feature-title">کد کامل پایتون</h3>
+              <p class="feature-description">
+                دریافت کد پایتون آماده اجرا با تمام توابع رسم المان‌های مدار و اتصالات بین آن‌ها.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12,6 12,12 16,14"></polyline>
+                </svg>
+              </div>
+              <h3 class="feature-title">پشتیبانی فارسی</h3>
+              <p class="feature-description">
+                رابط کاربری کاملاً فارسی با قابلیت درک و پردازش توضیحات مدار به زبان پارسی.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title">ذخیره‌سازی ابری</h3>
+              <p class="feature-description">
+                ذخیره امن تاریخچه چت‌ها و پروژه‌های شما در فضای ابری با قابلیت دسترسی از هر دستگاهی.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Examples Section -->
+      <section id="examples" class="examples-section">
+        <div class="examples-container">
+          <h2 class="examples-title">نمونه مدارها</h2>
+          <div class="examples-grid">
+            <div class="example-card">
+              <div class="example-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <line x1="7" y1="17" x2="17" y2="17"></line>
+                  <line x1="7" y1="12" x2="17" y2="12"></line>
+                  <line x1="7" y1="7" x2="17" y2="7"></line>
+                </svg>
+              </div>
+              <h3 class="example-title">فیلترهای الکترونیکی</h3>
+              <p class="example-description">فیلترهای پایین‌گذر، بالا‌گذر، باندگذر و باندstop</p>
+            </div>
+
+            <div class="example-card">
+              <div class="example-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M12 1v6m0 6v6"></path>
+                  <path d="M1 12h6m6 0h6"></path>
+                </svg>
+              </div>
+              <h3 class="example-title">تقویت‌کننده‌ها</h3>
+              <p class="example-description">تقویت‌کننده‌های عملیاتی و ترانزیستوری</p>
+            </div>
+
+            <div class="example-card">
+              <div class="example-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 12h18l-3 3-3-3-3 3-3-3-3 3z"></path>
+                </svg>
+              </div>
+              <h3 class="example-title">نوسان‌سازها</h3>
+              <p class="example-description">مدارهای نوسان‌ساز RC، LC و کریستالی</p>
+            </div>
+
+            <div class="example-card">
+              <div class="example-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="9" cy="9" r="2"></circle>
+                  <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                </svg>
+              </div>
+              <h3 class="example-title">مدارهای دیجیتال</h3>
+              <p class="example-description">گیت‌های منطقی، شمارنده‌ها و مدارات ترتیبی</p>
+            </div>
+
+            <div class="example-card">
+              <div class="example-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+              </div>
+              <h3 class="example-title">مدارهای قدرت</h3>
+              <p class="example-description">رگولاتورها، اینورترها و مدارهای سوئیچینگ</p>
+            </div>
+
+            <div class="example-card">
+              <div class="example-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+              </div>
+              <h3 class="example-title">و بسیاری دیگر...</h3>
+              <p class="example-description">هر مداری که بتوانید توصیف کنید!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section class="cta-section">
+        <div class="cta-content">
+          <h2 class="cta-title">آماده شروع هستید؟</h2>
+          <p class="cta-subtitle">
+            همین حالا حساب کاربری خود را ایجاد کنید و اولین مدار خود را طراحی کنید.
+            تمام ابزارهای مورد نیاز را به صورت رایگان در اختیارتان قرار می‌دهیم.
+          </p>
+          <a href="{% url 'signup' %}" class="btn-primary">شروع طراحی مدار</a>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="landing-footer">
+        <div class="footer-content">
+          <div class="footer-text">
+            © 2024 Circuit AI. تمام حقوق محفوظ است.
+          </div>
+          <div class="footer-links">
+            <a href="#" class="footer-link">درباره ما</a>
+            <a href="#" class="footer-link">تماس با ما</a>
+            <a href="#" class="footer-link">حریم خصوصی</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // Smooth scrolling for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        });
+      });
+
+      // Add intersection observer for animations
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      }, observerOptions);
+
+      // Observe feature cards and example cards
+      document.querySelectorAll('.feature-card, .example-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+      });
+    </script>
+  </body>
+</html>

@@ -23,11 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$!^5vlt3_3^s-65mvd^w6ny#&sj4i6k1co2xtdqw(@p5xe#+$i'
+SECRET_KEY = os.getenv('SECRET_KEY', 'rheWwJQ_vr-r0C3aVCmKrb7o-H9TI3MTPtz8lA4IKCKoHbPQ9hrh2g_QcKaM_6Bzp5s')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '81.161.229.37']
+# تنظیم ALLOWED_HOSTS بر اساس محیط
+if os.path.exists('/opt/apps'):  # محیط سرور
+    ALLOWED_HOSTS = ['81.161.229.37']
+else:  # محیط محلی
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 
 # Application definition
@@ -85,12 +89,21 @@ WSGI_APPLICATION = 'as1.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/opt/apps/ai-circuit-platform/as1/db.sqlite3',
+# تنظیم دیتابیس بر اساس محیط (سرور یا محلی)
+if os.path.exists('/opt/apps'):  # اگر روی سرور هستیم
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': '/opt/apps/ai-circuit-platform/as1/db.sqlite3',
+        }
     }
-}
+else:  # محیط محلی
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -134,13 +147,22 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-DEBUG = True
 
-CSRF_TRUSTED_ORIGINS =[
-    'https://kafshkabirqom.serveo.net',
-]
+# تنظیم DEBUG بر اساس متغیر محیطی
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-OPENAI_API_KEY = 'sk-aaaf76c4d38549a79a3b4eb9a81f762c'
+# تنظیم CSRF_TRUSTED_ORIGINS بر اساس محیط
+if os.path.exists('/opt/apps'):  # محیط سرور
+    CSRF_TRUSTED_ORIGINS = [
+        'https://kafshkabirqom.serveo.net',
+    ]
+else:  # محیط محلی
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'sk-aaaf76c4d38549a79a3b4eb9a81f762c')
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
