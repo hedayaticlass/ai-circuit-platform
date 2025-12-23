@@ -558,6 +558,10 @@ def call_llm_local(prompt: str, llm_base_url: str, llm_model: str, llm_api_key: 
     }
 
 
+def landing(request):
+    """نمایش صفحه لندینگ"""
+    return render(request, 'landing.html')
+
 def index(request):
     """نمایش UI صفحه اصلی چت"""
     # فرم‌های ورود و ثبت‌نام را به قالب بفرستید
@@ -769,14 +773,6 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'index.html', {'login_form': form, 'show_login': True})
 
-@login_required
-def logout_view(request):
-    logout(request)
-    return redirect('index')
-
-
-
-
 def signup_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -815,4 +811,4 @@ def login_view(request):
 @login_required
 def logout_view(request):
     logout(request)
-    return redirect('index')
+    return redirect('landing')
