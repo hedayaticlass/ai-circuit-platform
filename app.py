@@ -5,10 +5,12 @@ import re
 import io
 import numpy as np
 import altair as alt
+import platform
+import os
 from dotenv import load_dotenv
 from api_client import analyze_text, transcribe_audio
 from drawer import render_schematic
-from utils import run_ngspice_simulation
+from utils import run_ngspice_simulation, run_ngspice_with_plot
 from parser import get_netlist_info
 
 load_dotenv()
@@ -148,18 +150,32 @@ if "raw_spice" in st.session_state:
     v_cmds = [f"v({n})" for n in v_total]
     i_cmds = [f"i({e})" if e.upper().startswith('V') else f"@{e}[i]" for e in i_total]
     
-    # دستور پرینت مناسب برای هر تحلیل
+    # بررسی اینکه آیا در لینوکس هستیم و نیاز به رسم نمودار داریم
+    is_linux = platform.system() != "Windows"
+    needs_plot = bool(plot_nodes or plot_elements) and "DC Operating Point" not in sim_type
+    
+    # دستور پرینت یا پلات مناسب برای هر تحلیل
     targets = " ".join(v_cmds + i_cmds) if (v_cmds or i_cmds) else "all"
+    print_cmd = ""
+    plot_cmd = ""
+    
     if "DC Operating Point" in sim_type:
         print_cmd = f".print op {targets}"
     elif "Transient" in sim_type:
-        print_cmd = f".print tran {targets}"
+        if is_linux and needs_plot:
+            plot_cmd = f".plot tran {targets}"
+        else:
+            print_cmd = f".print tran {targets}"
     elif "DC Sweep" in sim_type:
-        print_cmd = f".print dc {targets}"
+        if is_linux and needs_plot:
+            plot_cmd = f".plot dc {targets}"
+        else:
+            print_cmd = f".print dc {targets}"
     elif "AC Sweep" in sim_type:
-        print_cmd = f".print ac {targets}"
-    else:
-        print_cmd = ""
+        if is_linux and needs_plot:
+            plot_cmd = f".plot ac {targets}"
+        else:
+            print_cmd = f".print ac {targets}"
     
     analysis = ""
     if "DC Operating Point" in sim_type: analysis = ".op"
@@ -172,7 +188,9 @@ if "raw_spice" in st.session_state:
         st.session_state["raw_spice"],
         analysis,
     ]
-    if print_cmd:
+    if plot_cmd:
+        final_lines.append(plot_cmd)
+    elif print_cmd:
         final_lines.append(print_cmd)
     final_lines.append(".end")
     final_cir = "\n".join([ln for ln in final_lines if ln.strip()])
@@ -211,8 +229,22 @@ if "raw_spice" in st.session_state:
 
     if st.button("Run Simulation 🚀", key="run_sim_btn"):
         with st.spinner("Simulating..."):
-            raw_res = run_ngspice_simulation(netlist_to_run)
+            # در لینوکس و برای نمودارها، از روش جدید استفاده می‌کنیم
+            plot_image_path = None
+            if is_linux and needs_plot:
+                plot_output_path = "ngspice_plot.png"
+                raw_res, plot_image_path = run_ngspice_with_plot(netlist_to_run, plot_output_path)
+            else:
+                raw_res = run_ngspice_simulation(netlist_to_run)
+            
             res = parse_output(raw_res)
+            
+            # اگر نمودار توسط ngspice ذخیره شده، آن را نمایش بده
+            plot_shown = False
+            if plot_image_path and os.path.exists(plot_image_path):
+                st.subheader("Result (Diagram):")
+                st.image(plot_image_path, caption="Ngspice Plot", use_container_width=True)
+                plot_shown = True
             
             if res["type"] == "scalars":
                 st.subheader("Result (DC):")
@@ -275,43 +307,46 @@ if "raw_spice" in st.session_state:
                         pass
             
             elif res["type"] == "plot":
-                st.subheader("Result (Diagram):")
-                df = res["df"]
-                x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
+                # اگر نمودار قبلاً نمایش داده نشده، از روش قبلی استفاده کن
+                if not plot_shown:
+                    st.subheader("Result (Diagram):")
+                    # در غیر این صورت از روش قبلی استفاده کن
+                    df = res["df"]
+                    x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
 
-                # انتخاب ستون‌های مناسب بر اساس نام گره‌ها و المان‌های انتخاب‌شده
-                plot_cols = []
-                for col in df.columns:
-                    col_l = col.lower()
-                    if col == x_axis or col_l == "index":
-                        continue
+                    # انتخاب ستون‌های مناسب بر اساس نام گره‌ها و المان‌های انتخاب‌شده
+                    plot_cols = []
+                    for col in df.columns:
+                        col_l = col.lower()
+                        if col == x_axis or col_l == "index":
+                            continue
 
-                    matched = False
-                    # ولتاژ گره‌ها
-                    for n in plot_nodes:
-                        n_l = n.lower()
-                        if (
-                            col_l == n_l
-                            or col_l == f"v({n_l})"
-                            or f"({n_l})" in col_l
-                        ):
-                            matched = True
-                            break
-                    # جریان المان‌ها
-                    if not matched:
-                        for e in plot_elements:
-                            e_l = e.lower()
-                            if e_l in col_l and ("[i]" in col_l or "i(" in col_l):
+                        matched = False
+                        # ولتاژ گره‌ها
+                        for n in plot_nodes:
+                            n_l = n.lower()
+                            if (
+                                col_l == n_l
+                                or col_l == f"v({n_l})"
+                                or f"({n_l})" in col_l
+                            ):
                                 matched = True
                                 break
+                        # جریان المان‌ها
+                        if not matched:
+                            for e in plot_elements:
+                                e_l = e.lower()
+                                if e_l in col_l and ("[i]" in col_l or "i(" in col_l):
+                                    matched = True
+                                    break
 
-                    if matched:
-                        plot_cols.append(col)
+                        if matched:
+                            plot_cols.append(col)
 
-                if plot_cols:
-                    st.line_chart(df.set_index(x_axis)[plot_cols])
-                else:
-                    # اگر چیزی به طور خاص انتخاب نشد یا پیدا نشد، همه ستون‌ها (به جز Index) رسم شوند
-                    st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
+                    if plot_cols:
+                        st.line_chart(df.set_index(x_axis)[plot_cols])
+                    else:
+                        # اگر چیزی به طور خاص انتخاب نشد یا پیدا نشد، همه ستون‌ها (به جز Index) رسم شوند
+                        st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
             else:
                 st.text_area("Console Log", raw_res, height=200)
