@@ -99,56 +99,56 @@ def run_ngspice_simulation(netlist_code):
         return f"System Error: {str(e)}"
 
 
-def run_ngspice_with_plot(netlist_code, plot_output_path="plot.png"):
+# utils.py (Updated)
+
+def run_ngspice_with_plot(netlist_code, plot_output_path="plot.png", variables_to_plot=""):
     """
-    اجرای ngspice با دستورات plot و ذخیره نمودار به صورت تصویر (برای لینوکس).
+    اجرای ngspice در حالت لینوکس با دستور hardcopy برای تولید تصویر توسط خود انجین.
     """
-    if platform.system() == "Windows":
-        # در ویندوز از روش قبلی استفاده می‌کنیم
-        return run_ngspice_simulation(netlist_code), None
-    
     if not shutil.which("ngspice"):
         return "⚠️ Error: Ngspice is not installed on the server.", None
 
     temp_file_path = ""
     try:
-        # اصلاح نت‌لیست: افزودن بلوک .control برای ذخیره نمودار
-        lines = netlist_code.split('\n')
-        modified_lines = []
-        end_found = False
-        
-        for line in lines:
-            if line.strip().lower() == '.end':
-                # قبل از .end بلوک .control را اضافه می‌کنیم
-                modified_lines.append(".control")
-                modified_lines.append("set hcopydevtype=png")
-                modified_lines.append(f"hardcopy {plot_output_path}")
-                modified_lines.append(".endc")
-                modified_lines.append(".end")
-                end_found = True
-            else:
-                modified_lines.append(line)
-        
-        # اگر .end وجود نداشت، آن را اضافه می‌کنیم
-        if not end_found:
-            modified_lines.append(".control")
-            modified_lines.append("set hcopydevtype=png")
-            modified_lines.append(f"hardcopy {plot_output_path}")
-            modified_lines.append(".endc")
-            modified_lines.append(".end")
-        
-        final_netlist = '\n'.join(modified_lines)
-        
-        # افزودن تیتر در صورت نیاز
-        if not final_netlist.strip().startswith("*"):
-            final_netlist = "* Auto-generated Title by AI Circuit Platform\n" + final_netlist
+        # حذف .end از انتهای فایل اصلی اگر وجود دارد (چون می‌خواهیم بلاک کنترل اضافه کنیم)
+        lines = netlist_code.splitlines()
+        cleaned_lines = [l for l in lines if not l.strip().lower().startswith(".end")]
+        base_netlist = "\n".join(cleaned_lines)
 
-        # ساخت فایل نت‌لیست موقت
+        # ساخت بلاک کنترلی برای تولید گرافیک
+        # set hcopydevtype=png: تعیین فرمت خروجی (نیاز به کامپایل ngspice با cairo دارد)
+        # set color0=white: پس‌زمینه سفید (مناسب برای وب)
+        # set color1=black: رنگ متن مشکی
+        control_block = [
+            "\n* Plotting Control Block",
+            ".control",
+            "set hcopydevtype=png",      
+            "set color0=white",          
+            "set color1=black",          
+            "set hcopyfont=Arial",       
+            "set hcopyfontsize=12",
+            "run",                       # اجرای شبیه‌سازی
+        ]
+
+        # اگر متغیری برای رسم داده شده، دستور hardcopy را می‌نویسیم
+        if variables_to_plot:
+            control_block.append(f"hardcopy {plot_output_path} {variables_to_plot}")
+        
+        control_block.append(".endc")
+        control_block.append(".end")
+
+        final_netlist = base_netlist + "\n" + "\n".join(control_block)
+        
+        # اگر تیتر ندارد اضافه کن
+        if not final_netlist.strip().startswith("*"):
+            final_netlist = "* Auto-generated Title\n" + final_netlist
+
+        # ذخیره در فایل موقت
         with tempfile.NamedTemporaryFile(mode='w', suffix='.cir', delete=False, encoding='utf-8') as temp_file:
             temp_file.write(final_netlist)
             temp_file_path = temp_file.name
         
-        # اجرای ngspice
+        # اجرا
         process = subprocess.run(
             ["ngspice", '-b', temp_file_path],
             capture_output=True,
@@ -158,19 +158,17 @@ def run_ngspice_with_plot(netlist_code, plot_output_path="plot.png"):
             timeout=30
         )
 
-        # حذف فایل موقت
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
-        # ترکیب خروجی‌ها
         full_output = process.stdout + "\n" + process.stderr
         
-        # بررسی وجود فایل نمودار
-        plot_file = None
+        # بررسی اینکه آیا فایل ساخته شده یا خیر
+        final_plot_path = None
         if os.path.exists(plot_output_path):
-            plot_file = plot_output_path
+            final_plot_path = plot_output_path
         
-        return full_output, plot_file
+        return full_output, final_plot_path
 
     except Exception as e:
         if temp_file_path and os.path.exists(temp_file_path):

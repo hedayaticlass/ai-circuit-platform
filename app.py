@@ -33,7 +33,6 @@ def clean_base_spice(spice_code):
 def parse_output(raw):
     """
     فیلتر نهایی برای حذف تمام داده‌های سیستمی و نگه داشتن فقط متغیرهای مدار.
-    مشکلات گزارش شده در صفحه ۲ فایل PDF (نویزهای dc, freq, P, r) را حل می‌کند.
     """
     # ۱. شناسایی جداول (Transient/Sweep)
     if "Index" in raw:
@@ -48,13 +47,11 @@ def parse_output(raw):
             return {"type": "plot", "df": df}
         except: pass
 
-    # ۲. استخراج مقادیر ثابت (DC OP) - حل مشکل نویزهای صفحه ۲ PDF 
-    # جستجوی الگوهای مقداردهی
+    # ۲. استخراج مقادیر ثابت (DC OP)
     pairs = re.findall(r"([a-zA-Z0-9_#\(\)@\[\]]+)[\s]*[=]?[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw)
     if not pairs:
         pairs = re.findall(r"^[\s]*([a-zA-Z0-9_#\(\)]+)[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw, re.MULTILINE)
 
-    # لیست سیاه سخت‌گیرانه برای حذف پارامترهای مدل و نویزهای سیستمی
     FORBIDDEN = ["temp", "tnom", "available", "size", "seconds", "elapsed", "dram", "initialization", "index", 
                  "tc1", "tc2", "tce", "defw", "kf", "af", "bv_max", "lf", "wf", "ef", "ac", "dtemp", "noisy", 
                  "portnum", "zo", "pwr", "phase", "rsh", "narrow", "short", "device", "model", "resistance", 
@@ -64,13 +61,11 @@ def parse_output(raw):
     seen = set()
     for n, v in pairs:
         name_lower = n.lower().strip()
-        # فقط ولتاژ گره‌ها و جریان شاخه‌ها را نگه دار
         is_node = name_lower.startswith('v(') or re.match(r'^[0-9]+$', name_lower) or name_lower in ["in", "out"]
         is_curr = 'branch' in name_lower or (name_lower.startswith('@') and '[i]' in name_lower)
         
         if (is_node or is_curr) and name_lower not in FORBIDDEN:
             if name_lower not in seen:
-                # استانداردسازی نام برای جدول و پلات
                 display_name = n
                 if (re.match(r'^[0-9]+$', name_lower) or name_lower in ["in", "out"]) and not is_curr:
                     display_name = f"V({n})"
@@ -81,7 +76,7 @@ def parse_output(raw):
     if filtered: return {"type": "scalars", "values": filtered}
     return {"type": "text", "content": raw}
 
-# --- رابط کاربری مطابق PDF ---
+# --- رابط کاربری ---
 st.title("AI Circuit → SPICE → Schematic")
 
 mode = st.radio("Input type", ["Text", "Audio"]) 
@@ -150,31 +145,25 @@ if "raw_spice" in st.session_state:
     v_cmds = [f"v({n})" for n in v_total]
     i_cmds = [f"i({e})" if e.upper().startswith('V') else f"@{e}[i]" for e in i_total]
     
-    # بررسی اینکه آیا در لینوکس هستیم و نیاز به رسم نمودار داریم
     is_linux = platform.system() != "Windows"
     needs_plot = bool(plot_nodes or plot_elements) and "DC Operating Point" not in sim_type
     
-    # دستور پرینت یا پلات مناسب برای هر تحلیل
+    # ساخت لیست متغیرها برای رسم یا چاپ
     targets = " ".join(v_cmds + i_cmds) if (v_cmds or i_cmds) else "all"
     print_cmd = ""
-    plot_cmd = ""
     
+    # تغییر مهم: در لینوکس اگر پلات لازم باشد، دستور چاپ یا پلات را اینجا اضافه نمی‌کنیم
+    # بلکه آن را به بخش .control در utils.py می‌سپاریم.
     if "DC Operating Point" in sim_type:
         print_cmd = f".print op {targets}"
     elif "Transient" in sim_type:
-        if is_linux and needs_plot:
-            plot_cmd = f".plot tran {targets}"
-        else:
+        if not (is_linux and needs_plot):
             print_cmd = f".print tran {targets}"
     elif "DC Sweep" in sim_type:
-        if is_linux and needs_plot:
-            plot_cmd = f".plot dc {targets}"
-        else:
+        if not (is_linux and needs_plot):
             print_cmd = f".print dc {targets}"
     elif "AC Sweep" in sim_type:
-        if is_linux and needs_plot:
-            plot_cmd = f".plot ac {targets}"
-        else:
+        if not (is_linux and needs_plot):
             print_cmd = f".print ac {targets}"
     
     analysis = ""
@@ -188,19 +177,16 @@ if "raw_spice" in st.session_state:
         st.session_state["raw_spice"],
         analysis,
     ]
-    if plot_cmd:
-        final_lines.append(plot_cmd)
-    elif print_cmd:
+    if print_cmd:
         final_lines.append(print_cmd)
+        
     final_lines.append(".end")
     final_cir = "\n".join([ln for ln in final_lines if ln.strip()])
 
     with st.expander("Show Final Netlist"): 
-        # اگر نت‌لیست تغییر کرده، مقدار ویرایش شده را reset کن
         if "edited_netlist" not in st.session_state or st.session_state.get("last_final_cir") != final_cir:
             st.session_state["edited_netlist"] = final_cir
             st.session_state["last_final_cir"] = final_cir
-            # لازم است state مربوط به ویجت نیز آپدیت شود تا متن جدید نمایش داده شود
             st.session_state["edit_netlist"] = final_cir
         
         edited_netlist = st.text_area(
@@ -209,16 +195,13 @@ if "raw_spice" in st.session_state:
             height=300,
             key="edit_netlist",
         )
-        # مقدار داخل text_area در state "edit_netlist" ذخیره می‌شود
         st.session_state["edited_netlist"] = st.session_state.get("edit_netlist", edited_netlist)
     
-    # استفاده از نت‌لیست ویرایش شده یا اصلی
     def sanitize_netlist(text: str) -> str:
-        """حذف دستورات اضافی مثل .circuits و اطمینان از پایان خط."""
         lines = []
         for ln in text.splitlines():
             if ln.strip().lower() == ".circuits":
-                continue  # این دستور در حالت batch خروجی را خراب می‌کند
+                continue 
             lines.append(ln)
         cleaned = "\n".join(lines)
         if not cleaned.endswith("\n"):
@@ -229,124 +212,88 @@ if "raw_spice" in st.session_state:
 
     if st.button("Run Simulation 🚀", key="run_sim_btn"):
         with st.spinner("Simulating..."):
-            # در لینوکس و برای نمودارها، از روش جدید استفاده می‌کنیم
             plot_image_path = None
+            
+            # لاجیک جدید برای لینوکس
             if is_linux and needs_plot:
                 plot_output_path = "ngspice_plot.png"
-                raw_res, plot_image_path = run_ngspice_with_plot(netlist_to_run, plot_output_path)
+                if os.path.exists(plot_output_path):
+                    os.remove(plot_output_path)
+                
+                # فراخوانی تابع اصلاح شده در utils با ارسال متغیرهای رسم
+                raw_res, plot_image_path = run_ngspice_with_plot(
+                    netlist_to_run, 
+                    plot_output_path, 
+                    variables_to_plot=targets
+                )
             else:
                 raw_res = run_ngspice_simulation(netlist_to_run)
             
             res = parse_output(raw_res)
             
-            # اگر نمودار توسط ngspice ذخیره شده، آن را نمایش بده
+            # نمایش تصویر نمودار تولید شده توسط Ngspice
             plot_shown = False
             if plot_image_path and os.path.exists(plot_image_path):
                 st.subheader("Result (Diagram):")
                 st.image(plot_image_path, caption="Ngspice Plot", use_container_width=True)
                 plot_shown = True
             
+            # نمایش مقادیر عددی (Scalars)
             if res["type"] == "scalars":
                 st.subheader("Result (DC):")
-
-                # اگر کاربر چیزی انتخاب نکرد، همه ولتاژها و جریان‌ها را نشان بده
                 user_selected = bool(sel_nodes or sel_elements or plot_nodes or plot_elements)
-
                 values = res["values"]
                 if user_selected:
-                    # فقط متغیرهای انتخاب‌شده (گره‌ها و المان‌ها) را نگه‌دار
                     wanted_names = set()
                     all_nodes = list(set(sel_nodes + plot_nodes))
                     all_elems = list(set(sel_elements + plot_elements))
-
                     for n in all_nodes:
                         n_l = n.lower()
-                        wanted_names.update({
-                            f"v({n_l})",
-                            f"v({n})",
-                            f"V({n})",
-                        })
+                        wanted_names.update({f"v({n_l})", f"v({n})", f"V({n})"})
                     for e in all_elems:
                         e_l = e.lower()
-                        # حالت‌های رایج نام‌گذاری جریان در ngspice
-                        wanted_names.update({
-                            f"i({e_l})",
-                            f"i({e})",
-                            f"I({e})",
-                            f"@{e}[i]",
-                            f"@{e_l}[i]",
-                        })
-
+                        wanted_names.update({f"i({e_l})", f"i({e})", f"I({e})", f"@{e}[i]", f"@{e_l}[i]"})
+                    
                     wanted_lower = {w.lower() for w in wanted_names}
-
-                    def is_wanted(name: str) -> bool:
-                        nl = name.lower()
-                        return nl in wanted_lower
-
-                    values = [row for row in res["values"] if is_wanted(row[0])]
+                    values = [row for row in res["values"] if row[0].lower() in wanted_lower]
 
                 st.table(pd.DataFrame(values, columns=["Variable", "Value"]))
 
-                # نمودار افقی فقط برای همان مقادیر نمایش‌داده‌شده
                 if values:
                     try:
                         plot_vars = {v[0]: float(v[1]) for v in values}
-                        df_plot = pd.DataFrame(
-                            {"Variable": list(plot_vars.keys()), "Value": list(plot_vars.values())}
-                        )
-                        chart = (
-                            alt.Chart(df_plot)
-                            .mark_bar()
-                            .encode(
-                                x=alt.X("Value:Q", title="Value"),
-                                y=alt.Y("Variable:N", sort=None, title="Variable"),
-                            )
+                        df_plot = pd.DataFrame({"Variable": list(plot_vars.keys()), "Value": list(plot_vars.values())})
+                        chart = alt.Chart(df_plot).mark_bar().encode(
+                            x=alt.X("Value:Q", title="Value"),
+                            y=alt.Y("Variable:N", sort=None, title="Variable"),
                         )
                         st.altair_chart(chart, use_container_width=True)
-                    except Exception:
-                        pass
+                    except: pass
             
+            # نمایش نمودار تعاملی (اگر توسط ngspice عکس تولید نشده باشد)
             elif res["type"] == "plot":
-                # اگر نمودار قبلاً نمایش داده نشده، از روش قبلی استفاده کن
                 if not plot_shown:
                     st.subheader("Result (Diagram):")
-                    # در غیر این صورت از روش قبلی استفاده کن
                     df = res["df"]
                     x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
-
-                    # انتخاب ستون‌های مناسب بر اساس نام گره‌ها و المان‌های انتخاب‌شده
+                    
                     plot_cols = []
                     for col in df.columns:
                         col_l = col.lower()
-                        if col == x_axis or col_l == "index":
-                            continue
-
+                        if col == x_axis or col_l == "index": continue
                         matched = False
-                        # ولتاژ گره‌ها
                         for n in plot_nodes:
                             n_l = n.lower()
-                            if (
-                                col_l == n_l
-                                or col_l == f"v({n_l})"
-                                or f"({n_l})" in col_l
-                            ):
-                                matched = True
-                                break
-                        # جریان المان‌ها
+                            if col_l == n_l or col_l == f"v({n_l})" or f"({n_l})" in col_l: matched = True; break
                         if not matched:
                             for e in plot_elements:
                                 e_l = e.lower()
-                                if e_l in col_l and ("[i]" in col_l or "i(" in col_l):
-                                    matched = True
-                                    break
-
-                        if matched:
-                            plot_cols.append(col)
+                                if e_l in col_l and ("[i]" in col_l or "i(" in col_l): matched = True; break
+                        if matched: plot_cols.append(col)
 
                     if plot_cols:
                         st.line_chart(df.set_index(x_axis)[plot_cols])
                     else:
-                        # اگر چیزی به طور خاص انتخاب نشد یا پیدا نشد، همه ستون‌ها (به جز Index) رسم شوند
                         st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
             else:
                 st.text_area("Console Log", raw_res, height=200)
