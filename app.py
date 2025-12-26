@@ -34,7 +34,6 @@ def parse_output(raw):
     """
     فیلتر نهایی برای حذف تمام داده‌های سیستمی و نگه داشتن فقط متغیرهای مدار.
     """
-    # ۱. شناسایی جداول (Transient/Sweep)
     if "Index" in raw:
         try:
             lines = raw.split('\n')
@@ -47,7 +46,6 @@ def parse_output(raw):
             return {"type": "plot", "df": df}
         except: pass
 
-    # ۲. استخراج مقادیر ثابت (DC OP)
     pairs = re.findall(r"([a-zA-Z0-9_#\(\)@\[\]]+)[\s]*[=]?[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw)
     if not pairs:
         pairs = re.findall(r"^[\s]*([a-zA-Z0-9_#\(\)]+)[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw, re.MULTILINE)
@@ -69,7 +67,6 @@ def parse_output(raw):
                 display_name = n
                 if (re.match(r'^[0-9]+$', name_lower) or name_lower in ["in", "out"]) and not is_curr:
                     display_name = f"V({n})"
-                
                 filtered.append([display_name, v])
                 seen.add(name_lower)
     
@@ -139,32 +136,32 @@ if "raw_spice" in st.session_state:
         plot_nodes = st.multiselect("Plot Voltages", nodes, key="plt_v") 
         plot_elements = st.multiselect("Plot Currents", elements, key="plt_i") 
 
-    # ساخت نت‌لیست نهایی
+    # تعیین متغیرها برای دستورات
     v_total = list(set(sel_nodes + plot_nodes))
     i_total = list(set(sel_elements + plot_elements))
     v_cmds = [f"v({n})" for n in v_total]
     i_cmds = [f"i({e})" if e.upper().startswith('V') else f"@{e}[i]" for e in i_total]
     
+    # شناسایی سیستم عامل
     is_linux = platform.system() != "Windows"
-    needs_plot = bool(plot_nodes or plot_elements) and "DC Operating Point" not in sim_type
     
-    # ساخت لیست متغیرها برای رسم یا چاپ
+    # شرط رسم نمودار: اگر متغیری انتخاب شده باشد و نوع تحلیل گرافیکی باشد (همه بجز نقطه کار DC)
+    # نقطه کار (Operating Point) نمودار ندارد، فقط عدد است.
+    is_graphical_analysis = "DC Operating Point" not in sim_type
+    needs_plot = bool(plot_nodes or plot_elements) and is_graphical_analysis
+
     targets = " ".join(v_cmds + i_cmds) if (v_cmds or i_cmds) else "all"
-    print_cmd = ""
     
-    # تغییر مهم: در لینوکس اگر پلات لازم باشد، دستور چاپ یا پلات را اینجا اضافه نمی‌کنیم
-    # بلکه آن را به بخش .control در utils.py می‌سپاریم.
+    # دستورات متنی فقط زمانی که نمودار نخواهیم (یا ویندوز باشد) اضافه می‌شوند
+    print_cmd = ""
     if "DC Operating Point" in sim_type:
         print_cmd = f".print op {targets}"
-    elif "Transient" in sim_type:
-        if not (is_linux and needs_plot):
-            print_cmd = f".print tran {targets}"
-    elif "DC Sweep" in sim_type:
-        if not (is_linux and needs_plot):
-            print_cmd = f".print dc {targets}"
-    elif "AC Sweep" in sim_type:
-        if not (is_linux and needs_plot):
-            print_cmd = f".print ac {targets}"
+    elif not (is_linux and needs_plot):
+        # اگر لینوکس است و نمودار می‌خواهیم، دستور print/plot معمولی را در فایل نمی‌نویسیم
+        # بلکه به utils می‌سپاریم که با .control hardcopy انجام دهد
+        if "Transient" in sim_type: print_cmd = f".print tran {targets}"
+        elif "DC Sweep" in sim_type: print_cmd = f".print dc {targets}"
+        elif "AC Sweep" in sim_type: print_cmd = f".print ac {targets}"
     
     analysis = ""
     if "DC Operating Point" in sim_type: analysis = ".op"
@@ -189,23 +186,17 @@ if "raw_spice" in st.session_state:
             st.session_state["last_final_cir"] = final_cir
             st.session_state["edit_netlist"] = final_cir
         
-        edited_netlist = st.text_area(
-            "Edit Netlist (optional)",
-            value=st.session_state["edited_netlist"],
-            height=300,
-            key="edit_netlist",
-        )
+        edited_netlist = st.text_area("Edit Netlist", value=st.session_state["edited_netlist"], height=300, key="edit_netlist")
         st.session_state["edited_netlist"] = st.session_state.get("edit_netlist", edited_netlist)
     
+    # تابع تمیزکاری نت‌لیست
     def sanitize_netlist(text: str) -> str:
         lines = []
         for ln in text.splitlines():
-            if ln.strip().lower() == ".circuits":
-                continue 
+            if ln.strip().lower() == ".circuits": continue 
             lines.append(ln)
         cleaned = "\n".join(lines)
-        if not cleaned.endswith("\n"):
-            cleaned += "\n"
+        if not cleaned.endswith("\n"): cleaned += "\n"
         return cleaned
 
     netlist_to_run = sanitize_netlist(st.session_state.get("edited_netlist", final_cir))
@@ -214,86 +205,69 @@ if "raw_spice" in st.session_state:
         with st.spinner("Simulating..."):
             plot_image_path = None
             
-            # لاجیک جدید برای لینوکس
+            # --- بخش اصلی تغییر یافته ---
+            # اگر لینوکس است و نوع تحلیل گرافیکی است (Tran, AC, DC Sweep)، از Ngspice Plot استفاده کن
             if is_linux and needs_plot:
                 plot_output_path = "ngspice_plot.png"
                 if os.path.exists(plot_output_path):
                     os.remove(plot_output_path)
                 
-                # فراخوانی تابع اصلاح شده در utils با ارسال متغیرهای رسم
+                # فراخوانی تابع رسم در Ngspice
                 raw_res, plot_image_path = run_ngspice_with_plot(
                     netlist_to_run, 
                     plot_output_path, 
                     variables_to_plot=targets
                 )
             else:
+                # برای ویندوز یا تحلیل‌های متنی (مثل .op)
                 raw_res = run_ngspice_simulation(netlist_to_run)
             
             res = parse_output(raw_res)
             
-            # نمایش تصویر نمودار تولید شده توسط Ngspice
+            # نمایش تصویر تولید شده توسط Ngspice
             plot_shown = False
             if plot_image_path and os.path.exists(plot_image_path):
-                st.subheader("Result (Diagram):")
-                st.image(plot_image_path, caption="Ngspice Plot", use_container_width=True)
+                st.subheader("Result (Ngspice Diagram):")
+                st.image(plot_image_path, caption="Generated by Ngspice", use_container_width=True)
                 plot_shown = True
-            
-            # نمایش مقادیر عددی (Scalars)
+            elif is_linux and needs_plot and not plot_shown:
+                st.warning("Ngspice plot file was not generated. Showing text output instead.")
+
+            # نمایش نتایج عددی (برای .op یا اگر نمودار نبود)
             if res["type"] == "scalars":
-                st.subheader("Result (DC):")
-                user_selected = bool(sel_nodes or sel_elements or plot_nodes or plot_elements)
+                st.subheader("Result (DC Values):")
                 values = res["values"]
-                if user_selected:
+                # فیلتر کردن مقادیر انتخابی کاربر
+                if bool(sel_nodes or sel_elements or plot_nodes or plot_elements):
                     wanted_names = set()
-                    all_nodes = list(set(sel_nodes + plot_nodes))
-                    all_elems = list(set(sel_elements + plot_elements))
-                    for n in all_nodes:
-                        n_l = n.lower()
-                        wanted_names.update({f"v({n_l})", f"v({n})", f"V({n})"})
-                    for e in all_elems:
-                        e_l = e.lower()
-                        wanted_names.update({f"i({e_l})", f"i({e})", f"I({e})", f"@{e}[i]", f"@{e_l}[i]"})
+                    all_req = list(set(sel_nodes + plot_nodes + sel_elements + plot_elements))
+                    for req in all_req:
+                        req_l = req.lower()
+                        # حالات مختلف نام‌گذاری
+                        wanted_names.update({f"v({req_l})", f"v({req})", req_l, req, f"i({req_l})", f"@{req_l}[i]"})
                     
-                    wanted_lower = {w.lower() for w in wanted_names}
-                    values = [row for row in res["values"] if row[0].lower() in wanted_lower]
+                    values = [row for row in values if row[0].lower() in wanted_names]
 
                 st.table(pd.DataFrame(values, columns=["Variable", "Value"]))
 
-                if values:
+                # نمودار میله‌ای ساده برای مقادیر DC
+                if values and not plot_shown:
                     try:
                         plot_vars = {v[0]: float(v[1]) for v in values}
                         df_plot = pd.DataFrame({"Variable": list(plot_vars.keys()), "Value": list(plot_vars.values())})
                         chart = alt.Chart(df_plot).mark_bar().encode(
-                            x=alt.X("Value:Q", title="Value"),
-                            y=alt.Y("Variable:N", sort=None, title="Variable"),
+                            x=alt.X("Value:Q"),
+                            y=alt.Y("Variable:N"),
                         )
                         st.altair_chart(chart, use_container_width=True)
                     except: pass
             
-            # نمایش نمودار تعاملی (اگر توسط ngspice عکس تولید نشده باشد)
-            elif res["type"] == "plot":
-                if not plot_shown:
-                    st.subheader("Result (Diagram):")
-                    df = res["df"]
-                    x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
-                    
-                    plot_cols = []
-                    for col in df.columns:
-                        col_l = col.lower()
-                        if col == x_axis or col_l == "index": continue
-                        matched = False
-                        for n in plot_nodes:
-                            n_l = n.lower()
-                            if col_l == n_l or col_l == f"v({n_l})" or f"({n_l})" in col_l: matched = True; break
-                        if not matched:
-                            for e in plot_elements:
-                                e_l = e.lower()
-                                if e_l in col_l and ("[i]" in col_l or "i(" in col_l): matched = True; break
-                        if matched: plot_cols.append(col)
-
-                    if plot_cols:
-                        st.line_chart(df.set_index(x_axis)[plot_cols])
-                    else:
-                        st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
-            else:
+            # فال‌بک (Fallback) برای حالتی که Ngspice عکس نداد ولی داده جدولی داریم
+            elif res["type"] == "plot" and not plot_shown:
+                st.subheader("Result (Interactive Plot):")
+                df = res["df"]
+                x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
+                st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
+            
+            if res["type"] == "text" and not plot_shown:
                 st.text_area("Console Log", raw_res, height=200)
