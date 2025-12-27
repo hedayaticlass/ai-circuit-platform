@@ -2,316 +2,325 @@
 import streamlit as st
 import pandas as pd
 import re
-import io
-import numpy as np
-import altair as alt
 from dotenv import load_dotenv
+import os
+
+# ایمپورت ماژول‌های داخلی
 from api_client import analyze_text, transcribe_audio
 from drawer import render_schematic
 from utils import run_ngspice_simulation
-from parser import get_netlist_info
+from analyzer import parse_ngspice_data, create_matplotlib_plot, create_dc_op_plot
 
 load_dotenv()
-SCHEM_PATH = "schematic.png"
-st.set_page_config(page_title="AI Circuit → SPICE → Schematic", layout="wide")
 
-def clean_base_spice(spice_code):
+SCHEM_PATH = "schematic.png"
+st.set_page_config(page_title="AI Circuit Platform", layout="wide", page_icon="⚡")
+
+# ==========================================
+# 1. توابع کمکی داخلی
+# ==========================================
+
+def extract_spice_nodes(spice_code):
+    """استخراج گره‌ها (Nodes) از نت‌لیست برای نمایش در لیست انتخاب"""
+    nodes = set()
+    if not spice_code: return []
+    for line in spice_code.split('\n'):
+        line = line.strip()
+        if not line or line.startswith(('*', '.')): continue
+        parts = line.split()
+        if len(parts) < 3: continue
+        
+        ref = parts[0].lower()
+        if ref.startswith(('r', 'c', 'l', 'v', 'i', 'd')):
+            nodes.add(parts[1]); nodes.add(parts[2])
+        elif ref.startswith('q') and len(parts) >= 4:
+            nodes.add(parts[1]); nodes.add(parts[2]); nodes.add(parts[3])
+        elif ref.startswith('m') and len(parts) >= 4:
+            nodes.add(parts[1]); nodes.add(parts[2]); nodes.add(parts[3])
+            
+    if '0' in nodes: nodes.remove('0')
+    return sorted(list(nodes))
+
+def sanitize_spice_code(spice_code):
+    """پاکسازی کد SPICE از توضیحات اضافی مدل زبانی"""
     if not spice_code: return ""
     lines = spice_code.split('\n')
     clean_lines = []
-    skip = False
+    valid_starts = ('r', 'c', 'l', 'v', 'i', 'd', 'q', 'm', 'x', 'e', 'f', 'g', 'h', 'b', 'k', '.', '*')
+    banned_words = ("title", "circuit", "here", "generated", "description", "note", "sure", "certainly")
+    skip_block = False
+
     for line in lines:
-        s = line.strip().lower()
-        if s.startswith(".control"): skip = True; continue
-        if s.startswith(".endc"): skip = False; continue
-        if skip or s.startswith((".tran", ".op", ".dc", ".ac", ".print", ".plot", ".end", ".title")): continue
-        if line.strip(): clean_lines.append(line)
+        s = line.strip()
+        if not s: continue
+        s_lower = s.lower()
+        
+        if s_lower.startswith(".control"): skip_block = True; continue
+        if s_lower.startswith(".endc"): skip_block = False; continue
+        if skip_block: continue
+
+        if s_lower.startswith(banned_words): s = "* " + s
+        elif not s_lower.startswith(valid_starts): s = "* " + s
+
+        if s.startswith("."):
+            valid_dots = (".tran", ".op", ".dc", ".ac", ".print", ".plot", ".end", ".model", ".subckt", ".include", ".lib", ".param")
+            if not any(s_lower.startswith(cmd) for cmd in valid_dots): s = s[1:]
+
+        # دستورات شبیه‌سازی قدیمی را حذف می‌کنیم تا کاربر جدید تنظیم کند
+        if s_lower.startswith((".tran", ".op", ".dc", ".ac", ".print", ".plot", ".end")): continue
+        clean_lines.append(s)
     return "\n".join(clean_lines)
 
-def parse_output(raw):
-    """
-    فیلتر نهایی برای حذف تمام داده‌های سیستمی و نگه داشتن فقط متغیرهای مدار.
-    مشکلات گزارش شده در صفحه ۲ فایل PDF (نویزهای dc, freq, P, r) را حل می‌کند.
-    """
-    # ۱. شناسایی جداول (Transient/Sweep)
-    if "Index" in raw:
-        try:
-            lines = raw.split('\n')
-            idx = next(i for i, l in enumerate(lines) if "Index" in l)
-            data_lines = [re.sub(r"\s+", ",", l.strip()) for l in lines[idx:] if l.strip() and not l.startswith(("-", "Warning", "Circuit"))]
-            df = pd.read_csv(io.StringIO("\n".join(data_lines)))
-            for col in df.columns:
-                if df[col].dtype == object:
-                    df[col] = df[col].apply(lambda x: float(str(x).split(',')[0]) if ',' in str(x) else x)
-            return {"type": "plot", "df": df}
-        except: pass
+def generate_full_netlist(base_spice, sim_type, params, plot_var):
+    """تولید نت‌لیست نهایی همراه با دستورات کنترلی"""
+    clean_base = sanitize_spice_code(base_spice)
+    final_spice = "* AI Circuit Simulation Wrapper\n" + clean_base
+    cmds = [".control", "run"]
+    an_cmd = ""
+    var = plot_var.strip()
 
-    # ۲. استخراج مقادیر ثابت (DC OP) - حل مشکل نویزهای صفحه ۲ PDF 
-    # جستجوی الگوهای مقداردهی
-    pairs = re.findall(r"([a-zA-Z0-9_#\(\)@\[\]]+)[\s]*[=]?[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw)
-    if not pairs:
-        pairs = re.findall(r"^[\s]*([a-zA-Z0-9_#\(\)]+)[\s]+([+-]?\d+\.?\d*e?[+-]?\d*)", raw, re.MULTILINE)
-
-    # لیست سیاه سخت‌گیرانه برای حذف پارامترهای مدل و نویزهای سیستمی
-    FORBIDDEN = ["temp", "tnom", "available", "size", "seconds", "elapsed", "dram", "initialization", "index", 
-                 "tc1", "tc2", "tce", "defw", "kf", "af", "bv_max", "lf", "wf", "ef", "ac", "dtemp", "noisy", 
-                 "portnum", "zo", "pwr", "phase", "rsh", "narrow", "short", "device", "model", "resistance", 
-                 "sparse", "dec", "r", "i", "p", "dc", "acmag", "freq", "z0"]
-    
-    filtered = []
-    seen = set()
-    for n, v in pairs:
-        name_lower = n.lower().strip()
-        # فقط ولتاژ گره‌ها و جریان شاخه‌ها را نگه دار
-        is_node = name_lower.startswith('v(') or re.match(r'^[0-9]+$', name_lower) or name_lower in ["in", "out"]
-        is_curr = 'branch' in name_lower or (name_lower.startswith('@') and '[i]' in name_lower)
-        
-        if (is_node or is_curr) and name_lower not in FORBIDDEN:
-            if name_lower not in seen:
-                # استانداردسازی نام برای جدول و پلات
-                display_name = n
-                if (re.match(r'^[0-9]+$', name_lower) or name_lower in ["in", "out"]) and not is_curr:
-                    display_name = f"V({n})"
-                
-                filtered.append([display_name, v])
-                seen.add(name_lower)
-    
-    if filtered: return {"type": "scalars", "values": filtered}
-    return {"type": "text", "content": raw}
-
-# --- رابط کاربری مطابق PDF ---
-st.title("AI Circuit → SPICE → Schematic")
-
-mode = st.radio("Input type", ["Text", "Audio"]) 
-user_input = ""
-
-if mode == "Text":
-    user_input = st.text_area("Describe the circuit", height=120) 
-else:
-    audio = st.file_uploader("Upload audio", type=["wav", "mp3"])
-    if audio and st.button("Transcribe", key="audio_btn"):
-        user_input = transcribe_audio(audio.read())
-
-if st.button("Generate", key="gen_btn"):
-    if user_input:
-        with st.spinner("Processing..."):
-            out = analyze_text(user_input)
-            st.session_state["raw_spice"] = clean_base_spice(out.get("spice", ""))
-            st.session_state["components"] = out.get("components", [])
-
-if "raw_spice" in st.session_state:
-    st.subheader("SPICE Netlist") 
-    st.code(st.session_state["raw_spice"], language="text")
-
-    if st.session_state["components"]:
-        st.subheader("Schematic") 
-        try:
-            img_path = render_schematic(st.session_state["components"], save_path=SCHEM_PATH)
-            st.image(img_path, caption="Auto-generated schematic") 
-        except: pass
-
-# --- کنسول شبیه‌سازی ---
-if "raw_spice" in st.session_state:
-    st.markdown("---")
-    st.header("Simulation Console") 
-    
-    nodes, elements = get_netlist_info(st.session_state["raw_spice"])
-    sim_type = st.radio("Analysis Type:", ["Transient (Time Domain)", "DC Operating Point", "DC Sweep", "AC Sweep"], horizontal=True)
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.write("**Settings:**")
-        params = {}
-        if "Transient" in sim_type:
-            params['step'] = st.text_input("Step", "1ms", key="s_step")
-            params['stop'] = st.text_input("Stop", "10ms", key="s_stop")
-        elif "DC Sweep" in sim_type:
-            srcs = [e for e in elements if e.upper().startswith(('V', 'I'))]
-            params['src'] = st.selectbox("Source", srcs if srcs else ["V1"], key="s_src")
-            params['start'], params['stop'], params['step'] = st.text_input("Start", "0", key="s_st"), st.text_input("Stop", "10", key="s_sp"), st.text_input("Step", "1", key="s_stp")
-        elif "AC Sweep" in sim_type:
-            params['pts'], params['fstart'], params['fstop'] = st.text_input("Pts/Dec", "10", key="s_p"), st.text_input("Start", "10", key="s_f1"), st.text_input("Stop", "1Meg", key="s_f2")
-
-    with col2:
-        st.write("**Variables (Text):**") 
-        sel_nodes = st.multiselect("Voltages (V)", nodes, key="txt_v")
-        sel_elements = st.multiselect("Currents (I)", elements, key="txt_i") 
-
-    with col3:
-        st.write("**Plotting (Graph):**") 
-        plot_nodes = st.multiselect("Plot Voltages", nodes, key="plt_v") 
-        plot_elements = st.multiselect("Plot Currents", elements, key="plt_i") 
-
-    # ساخت نت‌لیست نهایی
-    v_total = list(set(sel_nodes + plot_nodes))
-    i_total = list(set(sel_elements + plot_elements))
-    v_cmds = [f"v({n})" for n in v_total]
-    i_cmds = [f"i({e})" if e.upper().startswith('V') else f"@{e}[i]" for e in i_total]
-    
-    # دستور پرینت مناسب برای هر تحلیل
-    targets = " ".join(v_cmds + i_cmds) if (v_cmds or i_cmds) else "all"
-    if "DC Operating Point" in sim_type:
-        print_cmd = f".print op {targets}"
-    elif "Transient" in sim_type:
-        print_cmd = f".print tran {targets}"
-    elif "DC Sweep" in sim_type:
-        print_cmd = f".print dc {targets}"
+    if "Transient" in sim_type:
+        uic = " uic" if params.get("uic") else ""
+        an_cmd = f".tran {params['step']} {params['stop']}{uic}"
+        cmds.append(f"print {var}")
     elif "AC Sweep" in sim_type:
-        print_cmd = f".print ac {targets}"
-    else:
-        print_cmd = ""
-    
-    analysis = ""
-    if "DC Operating Point" in sim_type: analysis = ".op"
-    elif "Transient" in sim_type: analysis = f".tran {params.get('step','1m')} {params.get('stop','10m')}"
-    elif "DC Sweep" in sim_type: analysis = f".dc {params.get('src','V1')} {params.get('start','0')} {params.get('stop','10')} {params.get('step','1')}"
-    elif "AC Sweep" in sim_type: analysis = f".ac dec {params.get('pts','10')} {params.get('fstart','10')} {params.get('fstop','1Meg')}"
-    
-    final_lines = [
-        "* Final Simulation File",
-        st.session_state["raw_spice"],
-        analysis,
-    ]
-    if print_cmd:
-        final_lines.append(print_cmd)
-    final_lines.append(".end")
-    final_cir = "\n".join([ln for ln in final_lines if ln.strip()])
+        an_cmd = f".ac dec {params['points']} {params['fstart']} {params['fstop']}"
+        if var.lower().startswith("v(") and ")" in var:
+            node = var[2:-1]
+            cmds.append(f"print vdb({node})")
+        else:
+            cmds.append(f"print {var}")
+    elif "DC Sweep" in sim_type:
+        an_cmd = f".dc {params['source']} {params['start']} {params['stop']} {params.get('step','0.1')}"
+        cmds.append(f"print {var}")
+    elif "Operating Point" in sim_type:
+        an_cmd = ".op"
+        cmds.append("print all")
 
-    with st.expander("Show Final Netlist"): 
-        # اگر نت‌لیست تغییر کرده، مقدار ویرایش شده را reset کن
-        if "edited_netlist" not in st.session_state or st.session_state.get("last_final_cir") != final_cir:
-            st.session_state["edited_netlist"] = final_cir
-            st.session_state["last_final_cir"] = final_cir
-            # لازم است state مربوط به ویجت نیز آپدیت شود تا متن جدید نمایش داده شود
-            st.session_state["edit_netlist"] = final_cir
+    cmds.extend([".endc", ".end"])
+    return f"{final_spice}\n{an_cmd}\n" + "\n".join(cmds)
+
+# ==========================================
+# 2. UI Main
+# ==========================================
+st.title("AI Circuit Platform ⚡")
+
+with st.container():
+    c1, c2 = st.columns([2, 1])
+    with c1:
+        mode = st.radio("Input Mode", ["Text Description", "Voice Command"], horizontal=True)
+        user_text = ""
+        if mode == "Text Description":
+            user_text = st.text_area("Circuit Description:", placeholder="Example: A Low pass filter with R=1k and C=1uF...", height=100)
+        else:
+            audio = st.file_uploader("Audio", type=["wav", "mp3"])
+            if audio and st.button("Transcribe"):
+                # user_text = transcribe_audio(audio.read()) # نیاز به کلید Whisper
+                st.info("Voice transcription placeholder.")
+                user_text = "RC Circuit"
+
+    with c2:
+        st.write("")
+        st.write("")
+        if st.button("Generate Circuit 🛠️", type="primary", use_container_width=True):
+            if user_text:
+                with st.spinner("AI is designing your circuit..."):
+                    out = analyze_text(user_text)
+                    if isinstance(out, dict):
+                        st.session_state["spice"] = out.get("spice", "")
+                        st.session_state["components"] = out.get("components", [])
+                        st.session_state["sim_results"] = None
+                        st.session_state["sim_log"] = None
+                    else:
+                        st.session_state["spice"] = str(out)
+                        st.session_state["components"] = []
+
+if "spice" in st.session_state and st.session_state["spice"]:
+    st.markdown("---")
+    c_schem, c_code = st.columns(2)
+    with c_code:
+        st.subheader("Base Netlist")
+        st.code(st.session_state["spice"], language="spice")
+    with c_schem:
+        st.subheader("Schematic")
+        if st.session_state.get("components"):
+            try:
+                img_path = render_schematic(st.session_state["components"], SCHEM_PATH)
+                st.image(img_path)
+            except Exception as e:
+                st.error(f"Schematic Error: {e}")
+
+# ==========================================
+# 3. Simulation Console & Editor
+# ==========================================
+if "spice" in st.session_state and st.session_state["spice"]:
+    st.markdown("---")
+    st.header("📈 Simulation Console")
+    
+    detected_nodes = extract_spice_nodes(st.session_state["spice"])
+    plot_options = [f"v({n})" for n in detected_nodes]
+    
+    # اضافه کردن جریان منابع ولتاژ به لیست پلات
+    for line in st.session_state["spice"].split('\n'):
+        if line.lower().strip().startswith('v'):
+            parts = line.split()
+            if len(parts) > 0: plot_options.append(f"i({parts[0]})")
+
+    default_idx = 0
+    for i, opt in enumerate(plot_options):
+        if any(x in opt.lower() for x in ["out", "load", "vo"]):
+            default_idx = i; break
+            
+    with st.container(border=True):
+        sim_type = st.selectbox("Analysis Type", 
+                                ["Transient (Time)", "AC Sweep (Frequency)", "DC Sweep", "DC Operating Point"])
         
-        edited_netlist = st.text_area(
-            "Edit Netlist (optional)",
-            value=st.session_state["edited_netlist"],
-            height=300,
-            key="edit_netlist",
-        )
-        # مقدار داخل text_area در state "edit_netlist" ذخیره می‌شود
-        st.session_state["edited_netlist"] = st.session_state.get("edit_netlist", edited_netlist)
-    
-    # استفاده از نت‌لیست ویرایش شده یا اصلی
-    def sanitize_netlist(text: str) -> str:
-        """حذف دستورات اضافی مثل .circuits و اطمینان از پایان خط."""
-        lines = []
-        for ln in text.splitlines():
-            if ln.strip().lower() == ".circuits":
-                continue  # این دستور در حالت batch خروجی را خراب می‌کند
-            lines.append(ln)
-        cleaned = "\n".join(lines)
-        if not cleaned.endswith("\n"):
-            cleaned += "\n"
-        return cleaned
+        params = {}
+        cp1, cp2, cp3 = st.columns(3)
+        
+        if plot_options:
+            plot_var = st.selectbox("Signal to Plot", plot_options, index=default_idx)
+        else:
+            plot_var = st.text_input("Signal to Plot", "v(out)")
 
-    netlist_to_run = sanitize_netlist(st.session_state.get("edited_netlist", final_cir))
-
-    if st.button("Run Simulation 🚀", key="run_sim_btn"):
-        with st.spinner("Simulating..."):
-            raw_res = run_ngspice_simulation(netlist_to_run)
-            res = parse_output(raw_res)
-            
-            if res["type"] == "scalars":
-                st.subheader("Result (DC):")
-
-                # اگر کاربر چیزی انتخاب نکرد، همه ولتاژها و جریان‌ها را نشان بده
-                user_selected = bool(sel_nodes or sel_elements or plot_nodes or plot_elements)
-
-                values = res["values"]
-                if user_selected:
-                    # فقط متغیرهای انتخاب‌شده (گره‌ها و المان‌ها) را نگه‌دار
-                    wanted_names = set()
-                    all_nodes = list(set(sel_nodes + plot_nodes))
-                    all_elems = list(set(sel_elements + plot_elements))
-
-                    for n in all_nodes:
-                        n_l = n.lower()
-                        wanted_names.update({
-                            f"v({n_l})",
-                            f"v({n})",
-                            f"V({n})",
-                        })
-                    for e in all_elems:
-                        e_l = e.lower()
-                        # حالت‌های رایج نام‌گذاری جریان در ngspice
-                        wanted_names.update({
-                            f"i({e_l})",
-                            f"i({e})",
-                            f"I({e})",
-                            f"@{e}[i]",
-                            f"@{e_l}[i]",
-                        })
-
-                    wanted_lower = {w.lower() for w in wanted_names}
-
-                    def is_wanted(name: str) -> bool:
-                        nl = name.lower()
-                        return nl in wanted_lower
-
-                    values = [row for row in res["values"] if is_wanted(row[0])]
-
-                st.table(pd.DataFrame(values, columns=["Variable", "Value"]))
-
-                # نمودار افقی فقط برای همان مقادیر نمایش‌داده‌شده
-                if values:
-                    try:
-                        plot_vars = {v[0]: float(v[1]) for v in values}
-                        df_plot = pd.DataFrame(
-                            {"Variable": list(plot_vars.keys()), "Value": list(plot_vars.values())}
+        if "Transient" in sim_type:
+            with cp1: params["step"] = st.text_input("Step", "1ms")
+            with cp2: params["stop"] = st.text_input("Stop", "100ms")
+            with cp3: params["uic"] = st.checkbox("UIC", False)
+        elif "AC Sweep" in sim_type:
+            with cp1: params["points"] = st.text_input("Points/Dec", "10")
+            with cp2: params["fstart"] = st.text_input("Start Freq", "1Hz")
+            with cp3: params["fstop"] = st.text_input("Stop Freq", "1MHz")
+        elif "DC Sweep" in sim_type:
+            with cp1: params["source"] = st.text_input("Source Name", "V1")
+            with cp2: params["start"] = st.text_input("Start", "0")
+            with cp3: params["stop"] = st.text_input("Stop", "5"); params["step"] = st.text_input("Step", "0.1")
+        elif "Operating Point" in sim_type:
+            plot_var = "all"
+            # نمایش انتخاب متغیرها برای DC OP (اگر قبلاً شبیه‌سازی شده)
+            if st.session_state.get("dc_op_available_vars"):
+                available_vars = st.session_state["dc_op_available_vars"]
+                voltage_vars = [v for v in available_vars if re.match(r"^v\([0-9]+\)$", v.lower())]
+                current_vars = [v for v in available_vars if "#branch" in v.lower()]
+                
+                col_v, col_i = st.columns(2)
+                with col_v:
+                    if voltage_vars:
+                        selected_voltages = st.multiselect(
+                            "Select Voltages to Plot:",
+                            voltage_vars,
+                            default=st.session_state.get("dc_op_selected_voltages", voltage_vars),
+                            key="dc_op_voltages_select"
                         )
-                        chart = (
-                            alt.Chart(df_plot)
-                            .mark_bar()
-                            .encode(
-                                x=alt.X("Value:Q", title="Value"),
-                                y=alt.Y("Variable:N", sort=None, title="Variable"),
-                            )
+                        st.session_state["dc_op_selected_voltages"] = selected_voltages
+                with col_i:
+                    if current_vars:
+                        selected_currents = st.multiselect(
+                            "Select Currents to Plot:",
+                            current_vars,
+                            default=st.session_state.get("dc_op_selected_currents", current_vars),
+                            key="dc_op_currents_select"
                         )
-                        st.altair_chart(chart, use_container_width=True)
-                    except Exception:
-                        pass
+                        st.session_state["dc_op_selected_currents"] = selected_currents
+
+    st.subheader("📝 Netlist Editor (Editable)")
+    default_code = generate_full_netlist(st.session_state["spice"], sim_type, params, plot_var)
+    final_netlist_input = st.text_area("Review netlist before running:", value=default_code, height=250)
+
+    if st.button("Run Simulation 🚀", use_container_width=True):
+        with st.spinner("Running Ngspice..."):
+            res = run_ngspice_simulation(final_netlist_input)
+            data = parse_ngspice_data(res)
             
-            elif res["type"] == "plot":
-                st.subheader("Result (Diagram):")
-                df = res["df"]
-                x_axis = next((c for c in df.columns if c.lower() in ["time", "frequency", "v-sweep"]), df.columns[1])
+            st.session_state["sim_results"] = data
+            st.session_state["sim_log"] = res
 
-                # انتخاب ستون‌های مناسب بر اساس نام گره‌ها و المان‌های انتخاب‌شده
-                plot_cols = []
-                for col in df.columns:
-                    col_l = col.lower()
-                    if col == x_axis or col_l == "index":
-                        continue
+    # نمایش نتایج
+    if st.session_state.get("sim_results"):
+        data = st.session_state["sim_results"]
+        log = st.session_state["sim_log"]
 
-                    matched = False
-                    # ولتاژ گره‌ها
-                    for n in plot_nodes:
-                        n_l = n.lower()
-                        if (
-                            col_l == n_l
-                            or col_l == f"v({n_l})"
-                            or f"({n_l})" in col_l
-                        ):
-                            matched = True
-                            break
-                    # جریان المان‌ها
-                    if not matched:
-                        for e in plot_elements:
-                            e_l = e.lower()
-                            if e_l in col_l and ("[i]" in col_l or "i(" in col_l):
-                                matched = True
-                                break
-
-                    if matched:
-                        plot_cols.append(col)
-
-                if plot_cols:
-                    st.line_chart(df.set_index(x_axis)[plot_cols])
+        if data.get("error"):
+            st.error("Simulation Error")
+            st.error(data["error"])
+        
+        elif data.get("type") == "scalars":
+            st.success("DC Results")
+            if data.get("values"):
+                # فیلتر کردن فقط v(عدد) و #branch
+                filtered_values = []
+                for var_name, var_value in data["values"]:
+                    var_lower = var_name.lower()
+                    if "#branch" in var_lower or re.match(r"^v\([0-9]+\)$", var_lower):
+                        filtered_values.append([var_name, var_value])
+                
+                if filtered_values:
+                    df_op = pd.DataFrame(filtered_values, columns=["Parameter", "Value"])
+                    st.dataframe(df_op, use_container_width=True, hide_index=True)
                 else:
-                    # اگر چیزی به طور خاص انتخاب نشد یا پیدا نشد، همه ستون‌ها (به جز Index) رسم شوند
-                    st.line_chart(df.set_index(x_axis).drop(columns=["Index"], errors="ignore"))
-            else:
-                st.text_area("Console Log", raw_res, height=200)
+                    st.info("💡 No v(number) or #branch variables found in results.")
+                
+                # استخراج متغیرهای v(عدد) و #branch و ذخیره در session state
+                available_vars = []
+                for var_name, _ in data["values"]:
+                    var_lower = var_name.lower()
+                    # فقط v(عدد) و #branch
+                    if "#branch" in var_lower or re.match(r"^v\([0-9]+\)$", var_lower):
+                        available_vars.append(var_name)
+                
+                # ذخیره متغیرهای موجود برای استفاده در Simulation Console
+                st.session_state["dc_op_available_vars"] = available_vars
+                
+                # استفاده از انتخاب کاربر از Simulation Console
+                selected_voltages = st.session_state.get("dc_op_selected_voltages", [])
+                selected_currents = st.session_state.get("dc_op_selected_currents", [])
+                selected_vars = selected_voltages + selected_currents
+                
+                # اگر هیچ انتخابی نبود، همه را انتخاب کن
+                if not selected_vars and available_vars:
+                    voltage_vars = [v for v in available_vars if re.match(r"^v\([0-9]+\)$", v.lower())]
+                    current_vars = [v for v in available_vars if "#branch" in v.lower()]
+                    selected_vars = voltage_vars + current_vars
+                    st.session_state["dc_op_selected_voltages"] = voltage_vars
+                    st.session_state["dc_op_selected_currents"] = current_vars
+                
+                # رسم نمودار برای ولتاژ و جریان
+                if selected_vars:
+                    with st.expander("⚙️ Chart Settings"):
+                        c_w, c_h = st.columns(2)
+                        p_width = c_w.slider("Width", 4, 25, 14, key="dc_op_width")
+                        p_height = c_h.slider("Height", 3, 20, 6, key="dc_op_height")
+                    
+                    p_width = st.session_state.get("dc_op_width", 14)
+                    p_height = st.session_state.get("dc_op_height", 6)
+                    
+                    # فیلتر کردن values بر اساس انتخاب کاربر
+                    filtered_values = [(var, val) for var, val in data["values"] if var in selected_vars]
+                    
+                    if filtered_values:
+                        fig = create_dc_op_plot(filtered_values, figsize=(p_width, p_height))
+                        st.pyplot(fig, use_container_width=False)
+                    else:
+                        st.warning("⚠️ No valid variables selected for plotting.")
+                else:
+                    st.info("💡 No v(number) or #branch variables found in results.")
+
+        elif data.get("type") == "plot":
+            st.success(f"Results: {data.get('analysis', '').upper()}")
+            
+            # تنظیمات نمودار - slider با key خودش session state را مدیریت می‌کند
+            with st.expander("⚙️ Chart Settings"):
+                c_w, c_h = st.columns(2)
+                p_width = c_w.slider("Width", 4, 25, 10, key="plot_width")
+                p_height = c_h.slider("Height", 3, 20, 6, key="plot_height")
+            
+            # استفاده از session state (که توسط slider با key تنظیم شده) یا مقادیر پیش‌فرض
+            p_width = st.session_state.get("plot_width", 10)
+            p_height = st.session_state.get("plot_height", 6)
+            
+            fig = create_matplotlib_plot(data["df"], data.get("analysis"), figsize=(p_width, p_height))
+            st.pyplot(fig, use_container_width=False)
+
+        st.markdown("---")
+        with st.expander("📜 View Raw Log"):
+            st.text_area("Ngspice Output:", value=log, height=300)
