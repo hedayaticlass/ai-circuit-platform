@@ -5,11 +5,24 @@ import re
 from dotenv import load_dotenv
 import os
 
-# ایمپورت ماژول‌های داخلی
+# ایمپورت ماژول‌های داخلی (فرض بر این است که این فایل‌ها در کنار app.py هستند)
 from api_client import analyze_text, transcribe_audio
 from drawer import render_schematic
 from utils import run_ngspice_simulation
-from analyzer import parse_ngspice_data, create_matplotlib_plot, create_dc_op_plot
+
+# تلاش برای ایمپورت توابع تحلیلگر
+try:
+    from analyzer import parse_ngspice_data, create_matplotlib_plot
+    # اگر تابع create_dc_op_plot وجود نداشت، یک نسخه جایگزین ساده تعریف می‌کنیم تا برنامه خطا ندهد
+    try:
+        from analyzer import create_dc_op_plot
+    except ImportError:
+        def create_dc_op_plot(data, figsize):
+            st.warning("تابع create_dc_op_plot در analyzer.py یافت نشد.")
+            return None
+except ImportError:
+    st.error("فایل analyzer.py یافت نشد.")
+    st.stop()
 
 load_dotenv()
 
@@ -72,7 +85,6 @@ def sanitize_spice_code(spice_code):
     return "\n".join(clean_lines)
 
 def generate_full_netlist(base_spice, sim_type, params, plot_var):
-    """تولید نت‌لیست نهایی همراه با دستورات کنترلی"""
     clean_base = sanitize_spice_code(base_spice)
     final_spice = "* AI Circuit Simulation Wrapper\n" + clean_base
     cmds = [".control", "run"]
@@ -83,13 +95,21 @@ def generate_full_netlist(base_spice, sim_type, params, plot_var):
         uic = " uic" if params.get("uic") else ""
         an_cmd = f".tran {params['step']} {params['stop']}{uic}"
         cmds.append(f"print {var}")
+        
     elif "AC Sweep" in sim_type:
         an_cmd = f".ac dec {params['points']} {params['fstart']} {params['fstop']}"
+        
+        # --- تغییرات این بخش برای انتخاب دسی‌بل یا اندازه ---
         if var.lower().startswith("v(") and ")" in var:
-            node = var[2:-1]
-            cmds.append(f"print vdb({node})")
+            node = var[2:-1] # استخراج نام گره
+            if params.get("ac_scale") == "Magnitude (V)":
+                cmds.append(f"print vm({node})") # vm یعنی Voltage Magnitude
+            else:
+                cmds.append(f"print vdb({node})") # پیش‌فرض دسی‌بل
         else:
             cmds.append(f"print {var}")
+        # ----------------------------------------------------
+
     elif "DC Sweep" in sim_type:
         an_cmd = f".dc {params['source']} {params['start']} {params['stop']} {params.get('step','0.1')}"
         cmds.append(f"print {var}")
@@ -178,7 +198,19 @@ if "spice" in st.session_state and st.session_state["spice"]:
         params = {}
         cp1, cp2, cp3 = st.columns(3)
         
-        if plot_options:
+        # فیلتر کردن plot_options برای AC Sweep (فقط ولتاژ، بدون جریان)
+        if "AC Sweep" in sim_type:
+            filtered_plot_options = [opt for opt in plot_options if not opt.lower().startswith("i(")]
+            if filtered_plot_options:
+                filtered_default_idx = 0
+                for i, opt in enumerate(filtered_plot_options):
+                    if any(x in opt.lower() for x in ["out", "load", "vo"]):
+                        filtered_default_idx = i
+                        break
+                plot_var = st.selectbox("Signal to Plot", filtered_plot_options, index=filtered_default_idx)
+            else:
+                plot_var = st.text_input("Signal to Plot", "v(out)")
+        elif plot_options:
             plot_var = st.selectbox("Signal to Plot", plot_options, index=default_idx)
         else:
             plot_var = st.text_input("Signal to Plot", "v(out)")
@@ -187,10 +219,23 @@ if "spice" in st.session_state and st.session_state["spice"]:
             with cp1: params["step"] = st.text_input("Step", "1ms")
             with cp2: params["stop"] = st.text_input("Stop", "100ms")
             with cp3: params["uic"] = st.checkbox("UIC", False)
+            
         elif "AC Sweep" in sim_type:
             with cp1: params["points"] = st.text_input("Points/Dec", "10")
             with cp2: params["fstart"] = st.text_input("Start Freq", "1Hz")
             with cp3: params["fstop"] = st.text_input("Stop Freq", "1MHz")
+            
+            # --- اضافه کردن دکمه انتخاب مقیاس ---
+            st.write("Plot Scale:")
+            params["ac_scale"] = st.radio(
+                "Scale Type", 
+                ["Decibels (dB)", "Magnitude (V)"], 
+                index=0, 
+                horizontal=True,
+                label_visibility="collapsed"
+            )
+            # ------------------------------------
+            
         elif "DC Sweep" in sim_type:
             with cp1: params["source"] = st.text_input("Source Name", "V1")
             with cp2: params["start"] = st.text_input("Start", "0")
@@ -247,7 +292,7 @@ if "spice" in st.session_state and st.session_state["spice"]:
         elif data.get("type") == "scalars":
             st.success("DC Results")
             if data.get("values"):
-                # فیلتر کردن فقط v(عدد) و #branch
+                # فیلتر کردن فقط v(عدد) و #branch برای نمایش تمیزتر
                 filtered_values = []
                 for var_name, var_value in data["values"]:
                     var_lower = var_name.lower()
@@ -259,16 +304,17 @@ if "spice" in st.session_state and st.session_state["spice"]:
                     st.dataframe(df_op, use_container_width=True, hide_index=True)
                 else:
                     st.info("💡 No v(number) or #branch variables found in results.")
-                
-                # استخراج متغیرهای v(عدد) و #branch و ذخیره در session state
+                    # اگر لیست فیلتر شده خالی بود، کل داده‌ها را نشان بده
+                    df_op = pd.DataFrame(data["values"], columns=["Parameter", "Value"])
+                    st.dataframe(df_op, use_container_width=True, hide_index=True)
+
+                # استخراج متغیرهای v(عدد) و #branch برای پلات و ذخیره در session state
                 available_vars = []
                 for var_name, _ in data["values"]:
                     var_lower = var_name.lower()
-                    # فقط v(عدد) و #branch
                     if "#branch" in var_lower or re.match(r"^v\([0-9]+\)$", var_lower):
                         available_vars.append(var_name)
                 
-                # ذخیره متغیرهای موجود برای استفاده در Simulation Console
                 st.session_state["dc_op_available_vars"] = available_vars
                 
                 # استفاده از انتخاب کاربر از Simulation Console
@@ -276,7 +322,7 @@ if "spice" in st.session_state and st.session_state["spice"]:
                 selected_currents = st.session_state.get("dc_op_selected_currents", [])
                 selected_vars = selected_voltages + selected_currents
                 
-                # اگر هیچ انتخابی نبود، همه را انتخاب کن
+                # اگر بار اول است و هنوز انتخابی نشده، همه را پیش‌فرض بگیر
                 if not selected_vars and available_vars:
                     voltage_vars = [v for v in available_vars if re.match(r"^v\([0-9]+\)$", v.lower())]
                     current_vars = [v for v in available_vars if "#branch" in v.lower()]
@@ -284,40 +330,33 @@ if "spice" in st.session_state and st.session_state["spice"]:
                     st.session_state["dc_op_selected_voltages"] = voltage_vars
                     st.session_state["dc_op_selected_currents"] = current_vars
                 
-                # رسم نمودار برای ولتاژ و جریان
+                # رسم نمودار برای ولتاژ و جریان (DC OP Plot)
                 if selected_vars:
-                    with st.expander("⚙️ Chart Settings"):
+                    with st.expander("⚙️ Chart Settings", expanded=True):
                         c_w, c_h = st.columns(2)
+                        # اسلایدرها با کلید مخصوص
                         p_width = c_w.slider("Width", 4, 25, 14, key="dc_op_width")
                         p_height = c_h.slider("Height", 3, 20, 6, key="dc_op_height")
                     
-                    p_width = st.session_state.get("dc_op_width", 14)
-                    p_height = st.session_state.get("dc_op_height", 6)
+                    # فیلتر کردن داده‌ها بر اساس انتخاب کاربر
+                    plot_data_tuples = [(var, val) for var, val in data["values"] if var in selected_vars]
                     
-                    # فیلتر کردن values بر اساس انتخاب کاربر
-                    filtered_values = [(var, val) for var, val in data["values"] if var in selected_vars]
-                    
-                    if filtered_values:
-                        fig = create_dc_op_plot(filtered_values, figsize=(p_width, p_height))
-                        st.pyplot(fig, use_container_width=False)
+                    if plot_data_tuples:
+                        fig = create_dc_op_plot(plot_data_tuples, figsize=(p_width, p_height))
+                        if fig:
+                            st.pyplot(fig, use_container_width=False)
                     else:
                         st.warning("⚠️ No valid variables selected for plotting.")
-                else:
-                    st.info("💡 No v(number) or #branch variables found in results.")
 
         elif data.get("type") == "plot":
             st.success(f"Results: {data.get('analysis', '').upper()}")
             
-            # تنظیمات نمودار - slider با key خودش session state را مدیریت می‌کند
-            with st.expander("⚙️ Chart Settings"):
+            with st.expander("⚙️ Chart Settings", expanded=True):
                 c_w, c_h = st.columns(2)
-                p_width = c_w.slider("Width", 4, 25, 10, key="plot_width")
-                p_height = c_h.slider("Height", 3, 20, 6, key="plot_height")
+                p_width = c_w.slider("Width (inches)", 4, 25, 10, key="plot_width")
+                p_height = c_h.slider("Height (inches)", 3, 20, 6, key="plot_height")
             
-            # استفاده از session state (که توسط slider با key تنظیم شده) یا مقادیر پیش‌فرض
-            p_width = st.session_state.get("plot_width", 10)
-            p_height = st.session_state.get("plot_height", 6)
-            
+            # استفاده از مقادیر اسلایدر
             fig = create_matplotlib_plot(data["df"], data.get("analysis"), figsize=(p_width, p_height))
             st.pyplot(fig, use_container_width=False)
 
