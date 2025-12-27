@@ -131,7 +131,7 @@ with st.container():
         mode = st.radio("Input Mode", ["Text Description", "Voice Command"], horizontal=True)
         user_text = ""
         if mode == "Text Description":
-            user_text = st.text_area("Circuit Description:", placeholder="Example: A Low pass filter with R=1k and C=1uF...", height=100)
+            user_text = st.text_area("Circuit Description:", height=100)
         else:
             audio = st.file_uploader("Audio", type=["wav", "mp3"])
             if audio and st.button("Transcribe"):
