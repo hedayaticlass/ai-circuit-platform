@@ -1,0 +1,29 @@
+{% extends "account/base.html" %}
+
+{% block head_title %}تأیید ایمیل{% endblock %}
+
+{% block content %}
+<div style="text-align: center;">
+  <h3 style="color: var(--white-80); margin-bottom: 20px;">تأیید ایمیل</h3>
+
+  {% if confirmation %}
+  <div style="background: rgba(68, 255, 68, 0.1); border: 1px solid rgba(68, 255, 68, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+    <p style="color: var(--white-80); margin-bottom: 15px;">ایمیل شما تأیید شد! 🎉</p>
+    <p style="color: var(--white-60); font-size: 14px;">حالا می‌توانید وارد سیستم شوید.</p>
+  </div>
+
+  <a href="{% url 'account_login' %}" class="login-button">ورود به سیستم</a>
+
+  {% else %}
+  <div style="background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+    <p style="color: #ff6b6b; margin-bottom: 15px;">❌ خطا در تأیید ایمیل</p>
+    <p style="color: var(--white-60); font-size: 14px;">لینک تأیید ممکن است منقضی شده یا نامعتبر باشد.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 15px;">
+    <a href="{% url 'account_email_verification_sent' %}" class="login-button">ارسال مجدد ایمیل تأیید</a>
+    <a href="{% url 'account_login' %}" class="login-button">بازگشت به صفحه ورود</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

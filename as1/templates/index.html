@@ -1,3 +1,6 @@
+{% load socialaccount %}
+{% load account %}
+{% load static %}
 <!doctype html>
 <html lang="fa" dir="rtl">
   <head>
@@ -14,10 +17,52 @@
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="logo">
-            <div class="logo-icon">⚡</div>
-            <h2>Circuit AI</h2>
+            <div class="logo-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.1 -0.1 20.2 10.2" width="32" height="16">
+                <defs>
+                  <linearGradient id="sidebarCircuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0" />
+                    <stop offset="50%" style="stop-color:#ffffff;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+                  </linearGradient>
+                </defs>
+                <!-- Background static circuit -->
+                <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                      stroke="rgba(255, 255, 255, 0.4)"
+                      stroke-width="0.15"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round" />
+                <!-- Animated flowing circuit -->
+                <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                      stroke="url(#sidebarCircuitGradient)"
+                      stroke-width="0.3"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-dasharray="1,2"
+                      pathLength="100">
+                  <animate attributeName="stroke-dashoffset"
+                           values="0;-20"
+                           dur="1.5s"
+                           repeatCount="indefinite" />
+                  <animate attributeName="stroke-width"
+                           values="0.3;0.4;0.3"
+                           dur="2s"
+                           repeatCount="indefinite" />
+                </path>
+              </svg>
+            </div>
+            <h2 data-lang-key="circuit-ai">Circuit AI</h2>
           </div>
           <div class="sidebar-header-actions">
+            <div class="language-toggle">
+              <div class="lang-toggle" data-lang="en">
+                <div class="lang-slider">EN</div>
+                <span class="lang-text en">EN</span>
+                <span class="lang-text fa">FA</span>
+              </div>
+            </div>
             <button id="btnToggleSettings" class="btn-glass btn-icon" title="تنظیمات">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.875 6.27a2.225 2.225 0 0 1 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" /><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /></svg>
             </button>
@@ -30,32 +75,32 @@
         <div class="sidebar-content">
           <div id="sidebarContentWrapper" class="sidebar-content-wrapper">
             <div id="settingsSection" class="settings-section">
-              <h3 class="section-title">تنظیمات</h3>
+              <h3 class="section-title" data-lang-key="settings">تنظیمات</h3>
               <div class="form-group">
-                <label for="llmBaseUrl">Base URL</label>
+                <label for="llmBaseUrl" data-lang-key="base-url">Base URL</label>
                 <input id="llmBaseUrl" type="text" class="input-glass" value="http://127.0.0.1:1234" placeholder="http://127.0.0.1:1234" />
               </div>
               <div class="form-group">
-                <label for="llmModel">نام مدل</label>
+                <label for="llmModel" data-lang-key="model-name">نام مدل</label>
                 <input id="llmModel" type="text" class="input-glass" value="grok-3-reasoning-gemma3-4b-distilled-hf" placeholder="نام مدل" />
               </div>
               <div class="form-group">
-                <label for="llmApiKey">API Key</label>
+                <label for="llmApiKey" data-lang-key="api-key">API Key</label>
                 <input id="llmApiKey" type="password" class="input-glass" placeholder="sk-... یا API Key محلی" />
-                <small class="input-hint">برای OpenAI با sk- شروع می‌شود</small>
+                <small class="input-hint" data-lang-key="api-key-hint">برای OpenAI با sk- شروع می‌شود</small>
               </div>
               <div class="form-group">
-                <label>کاربر:</label>
+                <label data-lang-key="user">کاربر:</label>
                 <p>{{ user.username }}</p>
                 <form action="{% url 'logout' %}" method="post" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn-glass" style="margin-top: 10px;">خروج</button>
+                    <button type="submit" class="btn-glass" style="margin-top: 10px;" data-lang-key="logout">خروج</button>
                 </form>
               </div>
             </div>
 
             <div id="historySection" class="history-section active">
-              <h3 class="section-title">تاریخچه</h3>
+              <h3 class="section-title" data-lang-key="history">تاریخچه</h3>
               <div id="chatSessions" class="chat-sessions">
                 <div class="session-item active" data-session="default">
                   <span class="session-name" contenteditable="false">چت جدید</span>
@@ -92,8 +137,8 @@
               </svg>
             </button>
             <div class="header-title">
-              <h1 id="chatSessionTitle">چت جدید</h1>
-              <p class="header-subtitle">مدار خود را با هوش مصنوعی طراحی کنید</p>
+              <h1 id="chatSessionTitle" data-lang-key="new-chat">چت جدید</h1>
+              <p class="header-subtitle" data-lang-key="design-circuit-ai">مدار خود را با هوش مصنوعی طراحی کنید</p>
             </div>
           </div>
           <div class="header-actions">
@@ -109,21 +154,40 @@
         <div id="chatMessages" class="chat-messages">
           <div class="welcome-message">
             <div class="welcome-icon">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.1 -0.1 20.2 10.2" width="64" height="32">
+                <defs>
+                  <linearGradient id="welcomeCircuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0" />
+                    <stop offset="50%" style="stop-color:#ffffff;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                      stroke="url(#welcomeCircuitGradient)"
+                      stroke-width="0.4"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-dasharray="2,3"
+                      pathLength="100">
+                  <animate attributeName="stroke-dashoffset"
+                           values="0;-25"
+                           dur="1.8s"
+                           repeatCount="indefinite" />
+                </path>
               </svg>
             </div>
-            <h2>خوش آمدید</h2>
-            <p>توضیح مدار خود را به فارسی بنویسید و من برای شما کد و تصویر مدار را تولید می‌کنم.</p>
+            <h2 data-lang-key="welcome">خوش آمدید</h2>
+            <p data-lang-key="welcome-description">توضیح مدار خود را به فارسی بنویسید و من برای شما کد و تصویر مدار را تولید می‌کنم.</p>
             <div class="example-prompts">
               <div class="example-prompt glass-card" data-prompt="یک فیلتر RC پایین‌گذر با مقاومت 10k و خازن 10nF">
-                <span>فیلتر RC پایین‌گذر</span>
+                <span data-lang-key="rc-low-pass-filter">فیلتر RC پایین‌گذر</span>
               </div>
               <div class="example-prompt glass-card" data-prompt="یک تقویت‌کننده عملیاتی با فیدبک منفی">
-                <span>تقویت‌کننده عملیاتی</span>
+                <span data-lang-key="op-amp">تقویت‌کننده عملیاتی</span>
               </div>
               <div class="example-prompt glass-card" data-prompt="یک مدار نوسان‌ساز RC">
-                <span>نوسان‌ساز RC</span>
+                <span data-lang-key="rc-oscillator">نوسان‌ساز RC</span>
               </div>
             </div>
           </div>
@@ -131,8 +195,8 @@
 
         <div class="chat-input-container">
           <div class="input-wrapper glass-card">
-            <textarea 
-              id="chatInput" 
+            <textarea
+              id="chatInput"
               placeholder="توضیح مدار خود را بنویسید..."
               rows="1"
             ></textarea>
@@ -149,60 +213,113 @@
       <div class="login-container">
         <div class="login-form">
           <div class="logo">
-            <div class="logo-icon">⚡</div>
-            <h2 class="login-title">Circuit AI</h2>
+            <div class="logo-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.1 -0.1 20.2 10.2" width="32" height="16">
+                <defs>
+                  <linearGradient id="loginCircuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0" />
+                    <stop offset="50%" style="stop-color:#ffffff;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                      stroke="url(#loginCircuitGradient)"
+                      stroke-width="0.3"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-dasharray="1,2"
+                      pathLength="100">
+                  <animate attributeName="stroke-dashoffset"
+                           values="0;-20"
+                           dur="1.5s"
+                           repeatCount="indefinite" />
+                </path>
+              </svg>
+            </div>
+            <h2 class="login-title" data-lang-key="circuit-ai">Circuit AI</h2>
           </div>
-          <p class="header-subtitle" style="color: var(--white-60); font-size: 14px; margin-bottom: 30px; text-align: center;">مدار خود را با هوش مصنوعی طراحی کنید</p>
+          <p class="header-subtitle" style="color: var(--white-60); font-size: 14px; margin-bottom: 30px; text-align: center;" data-lang-key="design-circuit-ai">مدار خود را با هوش مصنوعی طراحی کنید</p>
 
           {% if signup_form %}
+            <!-- دکمه ثبت نام با گوگل -->
+            <a href="{% provider_login_url 'google' %}" class="google-signup-btn" data-lang-key="signup-with-google">
+              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              ثبت نام با گوگل
+            </a>
+
+            <div class="divider">
+              <span data-lang-key="or">یا</span>
+            </div>
+
             <form method="post" action="{% url 'signup' %}">
                 {% csrf_token %}
                 <div class="form-group">
-                  <label for="{{ signup_form.username.id_for_label }}">نام کاربری</label>
+                  <label for="{{ signup_form.username.id_for_label }}" data-lang-key="username">نام کاربری</label>
                   <input type="text" name="username" id="{{ signup_form.username.id_for_label }}" class="input-glass" placeholder="نام کاربری خود را وارد کنید" required>
                 </div>
                 <div class="form-group">
-                  <label for="{{ signup_form.email.id_for_label }}">ایمیل</label>
+                  <label for="{{ signup_form.email.id_for_label }}" data-lang-key="email">ایمیل</label>
                   <input type="email" name="email" id="{{ signup_form.email.id_for_label }}" class="input-glass" placeholder="ایمیل خود را وارد کنید" required>
                 </div>
                 <div class="form-group">
-                  <label for="{{ signup_form.password1.id_for_label }}">رمز عبور</label>
+                  <label for="{{ signup_form.password1.id_for_label }}" data-lang-key="password">رمز عبور</label>
                   <input type="password" name="password1" id="{{ signup_form.password1.id_for_label }}" class="input-glass" placeholder="رمز عبور خود را وارد کنید" required>
                 </div>
                 <div class="form-group">
-                  <label for="{{ signup_form.password2.id_for_label }}">تکرار رمز عبور</label>
+                  <label for="{{ signup_form.password2.id_for_label }}" data-lang-key="confirm-password">تکرار رمز عبور</label>
                   <input type="password" name="password2" id="{{ signup_form.password2.id_for_label }}" class="input-glass" placeholder="رمز عبور را تکرار کنید" required>
                 </div>
-                <button type="submit" class="login-button">ثبت نام</button>
+                <button type="submit" class="login-button" data-lang-key="signup">ثبت نام</button>
             </form>
             <div class="login-links">
-              <span>حساب کاربری دارید؟</span>
-              <a href="#" id="showLogin">وارد شوید</a>
+              <span data-lang-key="have-account">حساب کاربری دارید؟</span>
+              <a href="#" id="showLogin" data-lang-key="login">وارد شوید</a>
             </div>
           {% elif login_form %}
+            <!-- دکمه ورود با گوگل -->
+            <a href="{% provider_login_url 'google' %}" class="google-signup-btn" data-lang-key="login-with-google">
+              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              ورود با گوگل
+            </a>
+
+            <div class="divider">
+              <span data-lang-key="or">یا</span>
+            </div>
+
             <form method="post" action="{% url 'login' %}">
                 {% csrf_token %}
                 <div class="form-group">
-                  <label for="{{ login_form.username.id_for_label }}">نام کاربری یا ایمیل</label>
+                  <label for="{{ login_form.username.id_for_label }}" data-lang-key="username-or-email">نام کاربری یا ایمیل</label>
                   <input type="text" name="username" id="{{ login_form.username.id_for_label }}" class="input-glass" placeholder="نام کاربری یا ایمیل خود را وارد کنید" required>
                 </div>
                 <div class="form-group">
-                  <label for="{{ login_form.password.id_for_label }}">رمز عبور</label>
+                  <label for="{{ login_form.password.id_for_label }}" data-lang-key="password">رمز عبور</label>
                   <input type="password" name="password" id="{{ login_form.password.id_for_label }}" class="input-glass" placeholder="رمز عبور خود را وارد کنید" required>
                 </div>
                 {% if error_message %}
                     <p class="error-message">{{ error_message }}</p>
                 {% endif %}
-                <button type="submit" class="login-button">ورود</button>
+                <button type="submit" class="login-button" data-lang-key="login">ورود</button>
             </form>
             <div class="login-links">
-              <span>حساب کاربری ندارید؟</span>
-              <a href="#" id="showSignup">ثبت نام کنید</a>
+              <span data-lang-key="no-account">حساب کاربری ندارید؟</span>
+              <a href="#" id="showSignup" data-lang-key="signup-link">ثبت نام کنید</a>
             </div>
           {% else %}
-            <p style="color: var(--white-60); font-size: 16px; margin-bottom: 30px; text-align: center;">لطفاً وارد شوید یا ثبت نام کنید تا به چت دسترسی پیدا کنید.</p>
-            <button id="mainShowLogin" class="login-button" style="margin-bottom: 15px;">ورود</button>
-            <button id="mainShowSignup" class="login-button">ثبت نام</button>
+            <p style="color: var(--white-60); font-size: 16px; margin-bottom: 30px; text-align: center;" data-lang-key="please-login-signup">لطفاً وارد شوید یا ثبت نام کنید تا به چت دسترسی پیدا کنید.</p>
+            <button id="mainShowLogin" class="login-button" style="margin-bottom: 15px;" data-lang-key="login">ورود</button>
+            <button id="mainShowSignup" class="login-button" data-lang-key="signup">ثبت نام</button>
           {% endif %}
         </div>
       </div>
@@ -212,6 +329,115 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script>
+      // Language translations
+      const translations = {
+        en: {
+          'circuit-ai': 'Circuit AI',
+          'settings': 'Settings',
+          'base-url': 'Base URL',
+          'model-name': 'Model Name',
+          'api-key': 'API Key',
+          'api-key-hint': 'Starts with sk- for OpenAI',
+          'user': 'User:',
+          'logout': 'Logout',
+          'history': 'History',
+          'new-chat': 'New Chat',
+          'design-circuit-ai': 'Design your circuit with AI',
+          'toggle-menu': 'Toggle Menu',
+          'clear-chat': 'Clear Chat',
+          'welcome': 'Welcome',
+          'welcome-description': 'Write your circuit description in Persian and I will generate code and circuit image for you.',
+          'rc-low-pass-filter': 'RC Low Pass Filter',
+          'op-amp': 'Operational Amplifier',
+          'rc-oscillator': 'RC Oscillator',
+          'chat-placeholder': 'Describe your circuit...',
+          'send': 'Send',
+          'signup-with-google': 'Sign up with Google',
+          'login-with-google': 'Login with Google',
+          'or': 'or',
+          'username': 'Username',
+          'email': 'Email',
+          'password': 'Password',
+          'confirm-password': 'Confirm Password',
+          'signup': 'Sign Up',
+          'have-account': 'Have an account?',
+          'login': 'Login',
+          'username-or-email': 'Username or Email',
+          'no-account': 'Don\'t have an account?',
+          'signup-link': 'Sign up',
+          'please-login-signup': 'Please login or sign up to access the chat.'
+        },
+        fa: {
+          'circuit-ai': 'Circuit AI',
+          'settings': 'تنظیمات',
+          'base-url': 'Base URL',
+          'model-name': 'نام مدل',
+          'api-key': 'API Key',
+          'api-key-hint': 'برای OpenAI با sk- شروع می‌شود',
+          'user': 'کاربر:',
+          'logout': 'خروج',
+          'history': 'تاریخچه',
+          'new-chat': 'چت جدید',
+          'design-circuit-ai': 'مدار خود را با هوش مصنوعی طراحی کنید',
+          'toggle-menu': 'باز/بسته کردن منو',
+          'clear-chat': 'پاک کردن چت',
+          'welcome': 'خوش آمدید',
+          'welcome-description': 'توضیح مدار خود را به فارسی بنویسید و من برای شما کد و تصویر مدار را تولید می‌کنم.',
+          'rc-low-pass-filter': 'فیلتر RC پایین‌گذر',
+          'op-amp': 'تقویت‌کننده عملیاتی',
+          'rc-oscillator': 'نوسان‌ساز RC',
+          'chat-placeholder': 'توضیح مدار خود را بنویسید...',
+          'send': 'ارسال',
+          'signup-with-google': 'ثبت نام با گوگل',
+          'login-with-google': 'ورود با گوگل',
+          'or': 'یا',
+          'username': 'نام کاربری',
+          'email': 'ایمیل',
+          'password': 'رمز عبور',
+          'confirm-password': 'تکرار رمز عبور',
+          'signup': 'ثبت نام',
+          'have-account': 'حساب کاربری دارید؟',
+          'login': 'ورود',
+          'username-or-email': 'نام کاربری یا ایمیل',
+          'no-account': 'حساب کاربری ندارید؟',
+          'signup-link': 'ثبت نام کنید',
+          'please-login-signup': 'لطفاً وارد شوید یا ثبت نام کنید تا به چت دسترسی پیدا کنید.'
+        }
+      };
+
+      // Current language (default: English to match landing page)
+      let currentLang = 'en';
+
+      // Language switch function
+      function switchLanguage(lang) {
+        currentLang = lang;
+
+        // Update all elements with data-lang-key
+        document.querySelectorAll('[data-lang-key]').forEach(element => {
+          const key = element.getAttribute('data-lang-key');
+          if (translations[lang][key]) {
+            if (element.tagName === 'INPUT' && element.hasAttribute('placeholder')) {
+              element.placeholder = translations[lang][key];
+            } else {
+              element.textContent = translations[lang][key];
+            }
+          }
+        });
+
+        // Update language toggle
+        const langToggle = document.querySelector('.lang-toggle');
+        if (langToggle) {
+          langToggle.setAttribute('data-lang', lang);
+        }
+
+        // Update document direction
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+
+        // Save language preference
+        localStorage.setItem('circuit-ai-lang', lang);
+      }
+
       // Utility functions
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -267,8 +493,23 @@ const showSignupLink = $('#showSignup');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+  // Load saved language preference or default to English (matching landing page)
+  const savedLang = localStorage.getItem('circuit-ai-lang') || 'en';
+  switchLanguage(savedLang);
+
+  // Add click handler to language toggle
+  const langToggle = document.querySelector('.lang-toggle');
+  if (langToggle) {
+    langToggle.addEventListener('click', function() {
+      const currentLang = this.getAttribute('data-lang');
+      const newLang = currentLang === 'en' ? 'fa' : 'en';
+      this.setAttribute('data-lang', newLang);
+      switchLanguage(newLang);
+    });
+  }
+
   // Only load chat specific functions if user is authenticated (chatMessages element exists)
-  if (chatMessages) { 
+  if (chatMessages) {
     loadChatSessions();
     loadChatHistory(currentSessionId);
     setupChatEventListeners(); // Separate chat event listeners
@@ -503,19 +744,19 @@ function addMessage(role, content, isError = false) {
 function addAssistantMessage(messageData) {
   const messageDiv = document.createElement('div');
   messageDiv.className = 'message assistant';
-  
+
   const avatar = document.createElement('div');
   avatar.className = 'message-avatar';
   avatar.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot"><path d="M12 8V4H8"/><path d="M22 17H2a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z"/><path d="M2 17a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2"/></svg>';
-  
+
   const messageContent = document.createElement('div');
   messageContent.className = 'message-content';
-  
+
   const assistantOutput = document.createElement('div');
   assistantOutput.className = 'assistant-output';
-  
+
   const content = messageData.content; // Directly use messageData.content
-  
+
   // 1. Model Output (collapsible)
   if (content.modelOutput) {
     const { section: modelSection, contentDiv: modelContentDiv } = createOutputSection('1️⃣ خروجی مدل', 'model', true, true);
@@ -525,22 +766,94 @@ function addAssistantMessage(messageData) {
     modelContentDiv.appendChild(modelContent);
     assistantOutput.appendChild(modelSection);
   }
-  
+
   // 2. Python Code (collapsible)
   if (content.pythonCode) {
-    const { section: codeSection, contentDiv: codeContentDiv } = createOutputSection('2️⃣ کد پایتون تولید شده', 'code', true, true);
-    const codeContent = document.createElement('div');
-    codeContent.className = 'output-code';
+    const { section: pythonSection, contentDiv: pythonContentDiv } = createOutputSection('🐍 کد پایتون', 'python', true, true);
+    const pythonContent = document.createElement('div');
+    pythonContent.className = 'output-code';
     const pre = document.createElement('pre');
     pre.textContent = content.pythonCode;
-    codeContent.appendChild(pre);
-    codeContentDiv.appendChild(codeContent);
-    assistantOutput.appendChild(codeSection);
+    pythonContent.appendChild(pre);
+
+    // Copy button for Python code
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy-code';
+    copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1-1.1-2-2.5-2-4 0-1.5 1.1-3 2.5-4.5S7 2 8.5 2C10 2 11.4 1.1 12 2.5"/></svg>';
+    copyBtn.title = 'کپی کردن کد';
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(content.pythonCode).then(() => {
+        showToast('کد پایتون کپی شد!', 'success', 2000);
+      }).catch(err => {
+        console.error('Failed to copy Python code: ', err);
+        showToast('خطا در کپی کد پایتون', 'error', 2000);
+      });
+    });
+    pythonContent.appendChild(copyBtn);
+
+    pythonContentDiv.appendChild(pythonContent);
+    assistantOutput.appendChild(pythonSection);
   }
-  
+
+  // 3. SPICE Code (collapsible)
+  if (content.spiceCode) {
+    const { section: spiceSection, contentDiv: spiceContentDiv } = createOutputSection('🔌 کد SPICE', 'spice', true, true);
+    const spiceContent = document.createElement('div');
+    spiceContent.className = 'output-code';
+    const pre = document.createElement('pre');
+    pre.textContent = content.spiceCode;
+    spiceContent.appendChild(pre);
+
+    // Copy button for SPICE code
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy-code';
+    copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1-1.1-2-2.5-2-4 0-1.5 1.1-3 2.5-4.5S7 2 8.5 2C10 2 11.4 1.1 12 2.5"/></svg>';
+    copyBtn.title = 'کپی کردن کد';
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(content.spiceCode).then(() => {
+        showToast('کد SPICE کپی شد!', 'success', 2000);
+      }).catch(err => {
+        console.error('Failed to copy SPICE code: ', err);
+        showToast('خطا در کپی کد SPICE', 'error', 2000);
+      });
+    });
+    spiceContent.appendChild(copyBtn);
+
+    spiceContentDiv.appendChild(spiceContent);
+    assistantOutput.appendChild(spiceSection);
+  }
+
+  // 4. Components List (collapsible)
+  if (content.components && Array.isArray(content.components) && content.components.length > 0) {
+    const { section: componentsSection, contentDiv: componentsContentDiv } = createOutputSection('📋 لیست المان‌های مدار', 'components', true, true);
+    const componentsContent = document.createElement('div');
+    componentsContent.className = 'output-code';
+    const pre = document.createElement('pre');
+    pre.textContent = JSON.stringify(content.components, null, 2);
+    componentsContent.appendChild(pre);
+
+    // Copy button for components
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy-code';
+    copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1-1.1-2-2.5-2-4 0-1.5 1.1-3 2.5-4.5S7 2 8.5 2C10 2 11.4 1.1 12 2.5"/></svg>';
+    copyBtn.title = 'کپی کردن لیست';
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(JSON.stringify(content.components, null, 2)).then(() => {
+        showToast('لیست المان‌ها کپی شد!', 'success', 2000);
+      }).catch(err => {
+        console.error('Failed to copy components: ', err);
+        showToast('خطا در کپی لیست المان‌ها', 'error', 2000);
+      });
+    });
+    componentsContent.appendChild(copyBtn);
+
+    componentsContentDiv.appendChild(componentsContent);
+    assistantOutput.appendChild(componentsSection);
+  }
+
   // Legacy support for elements list (might be removed later)
   if (content.elements) {
-    const { section: elementsSection, contentDiv: elementsContentDiv } = createOutputSection('2️⃣ لیست المان‌های مدار', 'elements', true, true);
+    const { section: elementsSection, contentDiv: elementsContentDiv } = createOutputSection('📋 لیست المان‌های مدار (قدیمی)', 'elements', true, true);
     const elementsContent = document.createElement('div');
     elementsContent.className = 'output-code';
     const pre = document.createElement('pre');
@@ -549,10 +862,10 @@ function addAssistantMessage(messageData) {
     elementsContentDiv.appendChild(elementsContent);
     assistantOutput.appendChild(elementsSection);
   }
-  
+
   // Legacy support for code (might be removed later)
   if (content.code) {
-    const { section: codeSection, contentDiv: codeContentDiv } = createOutputSection('2️⃣ کد تولیدی', 'code', true, true);
+    const { section: codeSection, contentDiv: codeContentDiv } = createOutputSection('💻 کد تولیدی (قدیمی)', 'code', true, true);
     const codeContent = document.createElement('div');
     codeContent.className = 'output-code';
     const pre = document.createElement('pre');
@@ -561,64 +874,137 @@ function addAssistantMessage(messageData) {
     codeContentDiv.appendChild(codeContent);
     assistantOutput.appendChild(codeSection);
   }
-  
-  // SPICE Code (collapsible)
-  if (content.spiceCode) {
-    const { section: spiceSection, contentDiv: spiceContentDiv } = createOutputSection('🔌 کد SPICE', 'spice', true, true);
-    const spiceContent = document.createElement('div');
-    spiceContent.className = 'output-code';
-    const pre = document.createElement('pre');
-    pre.textContent = content.spiceCode;
-    spiceContent.appendChild(pre);
-    spiceContentDiv.appendChild(spiceContent);
-    assistantOutput.appendChild(spiceSection);
+
+  // 5. Image - رندر شده از کد پایتون
+  // اگر تصویر از قبل ذخیره شده، از آن استفاده کن
+  if (content.imageBase64 && content.imageBase64 !== "data:image/png;base64,") {
+    displayImage(content.imageBase64, assistantOutput);
   }
-  
-  // Components List (collapsible)
-  if (content.components && Array.isArray(content.components) && content.components.length > 0) {
-    const { section: componentsSection, contentDiv: componentsContentDiv } = createOutputSection('📋 لیست المان‌های مدار', 'components', true, true);
-    const componentsContent = document.createElement('div');
-    componentsContent.className = 'output-code';
-    const pre = document.createElement('pre');
-    pre.textContent = JSON.stringify(content.components, null, 2);
-    componentsContent.appendChild(pre);
-    componentsContentDiv.appendChild(componentsContent);
-    assistantOutput.appendChild(componentsSection);
+  // در غیر این صورت، اگر کد پایتون وجود دارد، تصویر تولید کن
+  else if (content.pythonCode) {
+    // درخواست به سرور برای رندر کردن کد
+    fetch('/api/chat/render-code/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ python_code: content.pythonCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.image_base64) {
+        displayImage(data.image_base64, assistantOutput);
+      } else {
+        // اگر خطا در تولید تصویر، پیام خطا نمایش بده
+        const { section: imageSection, contentDiv: imageContentDiv } = createOutputSection('🖼️ تصویر مدار', 'image', true, false);
+        const imageContent = document.createElement('div');
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'output-error';
+        errorMsg.textContent = 'خطا در تولید تصویر مدار. کد پایتون ممکن است نادرست باشد.';
+        errorMsg.style.cssText = 'color: #ff6b6b; padding: 16px; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 8px; margin: 10px 0;';
+        imageContent.appendChild(errorMsg);
+        imageContentDiv.appendChild(imageContent);
+        assistantOutput.appendChild(imageSection);
+      }
+    })
+    .catch(error => {
+      console.error('Error rendering code:', error);
+      const { section: imageSection, contentDiv: imageContentDiv } = createOutputSection('🖼️ تصویر مدار', 'image', true, false);
+      const imageContent = document.createElement('div');
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'output-error';
+      errorMsg.textContent = 'خطا در ارتباط با سرور برای تولید تصویر.';
+      errorMsg.style.cssText = 'color: #ff6b6b; padding: 16px; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 8px; margin: 10px 0;';
+      imageContent.appendChild(errorMsg);
+      imageContentDiv.appendChild(imageContent);
+      assistantOutput.appendChild(imageSection);
+    });
   }
-  
-  // 3. Image
-  if (content.imageBase64) {
-    const { section: imageSection, contentDiv: imageContentDiv } = createOutputSection('3️⃣ تصویر مدار', 'image', true, true);
+
+  function displayImage(imageBase64, container) {
+    const { section: imageSection, contentDiv: imageContentDiv } = createOutputSection('🖼️ تصویر مدار', 'image', true, false); // تصویر به صورت باز نمایش داده شود
     const imageContent = document.createElement('div');
     const img = document.createElement('img');
-    img.src = content.imageBase64;
+    img.src = imageBase64;
     img.alt = 'مدار تولید شده';
     img.className = 'output-image';
-    
+    img.style.cursor = 'pointer';
+    img.style.transition = 'all 0.3s ease';
+
+    // Toggle image size on click
+    let isLarge = false;
+    img.addEventListener('click', () => {
+      isLarge = !isLarge;
+      if (isLarge) {
+        img.style.maxWidth = '100%';
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        showToast('تصویر در اندازه بزرگ نمایش داده می‌شود', 'info', 2000);
+      } else {
+        img.style.maxWidth = '300px';
+        img.style.width = '100%';
+        img.style.height = 'auto';
+        showToast('تصویر در اندازه کوچک نمایش داده می‌شود', 'info', 2000);
+      }
+    });
+
     // Download button
     const downloadBtn = document.createElement('a');
-    downloadBtn.href = content.imageBase64;
+    downloadBtn.href = imageBase64;
     downloadBtn.download = `circuit-${Date.now()}.png`;
     downloadBtn.textContent = '📥 دانلود تصویر';
     downloadBtn.className = 'btn-glass';
-    downloadBtn.style.cssText = 'display: inline-block; margin-top: 16px; padding: 10px 20px; text-decoration: none; font-size: 13px; font-weight: 500; color: rgba(255, 255, 255, 0.9);';
+    downloadBtn.style.cssText = 'display: inline-block; margin-top: 16px; padding: 10px 20px; text-decoration: none; font-size: 13px; font-weight: 500; color: rgba(255, 255, 255, 0.9); margin-right: 10px;';
     downloadBtn.addEventListener('mouseenter', () => {
       downloadBtn.style.color = 'rgba(255, 255, 255, 1)';
     });
     downloadBtn.addEventListener('mouseleave', () => {
       downloadBtn.style.color = 'rgba(255, 255, 255, 0.9)';
     });
-    
+
+    // Resize button
+    const resizeBtn = document.createElement('button');
+    resizeBtn.className = 'btn-glass';
+    resizeBtn.textContent = '🔍 تغییر اندازه';
+    resizeBtn.style.cssText = 'display: inline-block; margin-top: 16px; padding: 10px 20px; font-size: 13px; font-weight: 500; border: none; background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.9); border-radius: 10px; cursor: pointer; transition: all 0.3s ease;';
+    resizeBtn.addEventListener('mouseenter', () => {
+      resizeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+      resizeBtn.style.color = 'rgba(255, 255, 255, 1)';
+    });
+    resizeBtn.addEventListener('mouseleave', () => {
+      resizeBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+      resizeBtn.style.color = 'rgba(255, 255, 255, 0.9)';
+    });
+    resizeBtn.addEventListener('click', () => {
+      isLarge = !isLarge;
+      if (isLarge) {
+        img.style.maxWidth = '100%';
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        showToast('تصویر در اندازه بزرگ نمایش داده می‌شود', 'info', 2000);
+      } else {
+        img.style.maxWidth = '300px';
+        img.style.width = '100%';
+        img.style.height = 'auto';
+        showToast('تصویر در اندازه کوچک نمایش داده می‌شود', 'info', 2000);
+      }
+    });
+
     imageContent.appendChild(img);
-    imageContent.appendChild(downloadBtn);
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.marginTop = '16px';
+    buttonContainer.appendChild(downloadBtn);
+    buttonContainer.appendChild(resizeBtn);
+    imageContent.appendChild(buttonContainer);
     imageContentDiv.appendChild(imageContent);
-    assistantOutput.appendChild(imageSection);
+    container.appendChild(imageSection);
   }
-  
+
   messageContent.appendChild(assistantOutput);
   messageDiv.appendChild(avatar);
   messageDiv.appendChild(messageContent);
-  
+
   if (chatMessages) {
     chatMessages.appendChild(messageDiv);
     scrollToBottom();
@@ -629,50 +1015,105 @@ function addAssistantMessage(messageData) {
 function createOutputSection(title, type, isCollapsible = false, isCollapsed = false) {
   const section = document.createElement('div');
   section.className = 'output-section';
-  
+
   if (isCollapsible) {
     section.classList.add('collapsible');
     if (isCollapsed) {
       section.classList.add('collapsed');
     }
-    
+
     const header = document.createElement('div');
     header.className = 'output-section-header';
-    
+
     const titleDiv = document.createElement('div');
     titleDiv.className = 'output-section-title';
     titleDiv.textContent = title;
-    
+
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'output-section-preview';
+    previewDiv.style.display = 'none'; // Initially hidden
+
     const collapseIcon = document.createElement('div');
     collapseIcon.className = 'collapse-icon';
     collapseIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-    
+
     header.appendChild(titleDiv);
+    header.appendChild(previewDiv);
     header.appendChild(collapseIcon);
-    
+
     header.addEventListener('click', () => {
       section.classList.toggle('collapsed');
+      updatePreview(section, type);
     });
-    
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'output-section-content';
-    
+
+    // Add preview update after content is added
+    const observer = new MutationObserver(() => {
+      updatePreview(section, type);
+    });
+    observer.observe(contentDiv, { childList: true, subtree: true });
+
     section.appendChild(header);
     section.appendChild(contentDiv);
-    
+
     return { section, contentDiv };
   } else {
     const titleDiv = document.createElement('div');
     titleDiv.className = 'output-section-title';
     titleDiv.textContent = title;
-    
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'output-section-content';
-    
+
     section.appendChild(titleDiv);
     section.appendChild(contentDiv);
-    
+
     return { section, contentDiv };
+  }
+}
+
+// Update preview for collapsed sections
+function updatePreview(section, type) {
+  const header = section.querySelector('.output-section-header');
+  const previewDiv = header.querySelector('.output-section-preview');
+  const contentDiv = section.querySelector('.output-section-content');
+
+  if (section.classList.contains('collapsed')) {
+    // Show preview
+    let previewText = '';
+
+    if (type === 'image') {
+      previewText = 'تصویر مدار (کلیک کنید تا اندازه تغییر کند)';
+    } else {
+      // Get first line of text content
+      const textContent = contentDiv.textContent || '';
+      const firstLine = textContent.split('\n')[0].trim();
+      if (firstLine.length > 80) {
+        previewText = firstLine.substring(0, 80) + '...';
+      } else if (firstLine.length > 0) {
+        previewText = firstLine;
+      } else {
+        previewText = 'محتوای خالی';
+      }
+    }
+
+    previewDiv.textContent = previewText;
+    previewDiv.style.display = 'block';
+    previewDiv.style.opacity = '0.7';
+    previewDiv.style.fontSize = '12px';
+    previewDiv.style.fontStyle = 'italic';
+    previewDiv.style.marginRight = '10px';
+    previewDiv.style.flex = '1';
+    previewDiv.style.textAlign = 'right';
+    previewDiv.style.direction = 'ltr';
+    previewDiv.style.whiteSpace = 'nowrap';
+    previewDiv.style.overflow = 'hidden';
+    previewDiv.style.textOverflow = 'ellipsis';
+  } else {
+    // Hide preview
+    previewDiv.style.display = 'none';
   }
 }
 
@@ -1349,6 +1790,87 @@ function toggleSettingsHistory() {
       .sidebar-header-actions {
         display: flex;
         gap: 8px;
+        align-items: center;
+      }
+
+      /* Language Toggle */
+      .language-toggle {
+        display: flex;
+        align-items: center;
+        margin-right: 8px;
+      }
+
+      .lang-toggle {
+        position: relative;
+        width: 50px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        padding: 2px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+      }
+
+      .lang-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--stroke-hover);
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+      }
+
+      .lang-slider {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        background: var(--white-20);
+        border: 1px solid var(--white-50);
+        border-radius: 9px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 600;
+        color: var(--white);
+      }
+
+      .lang-toggle[data-lang="fa"] .lang-slider {
+        transform: translateX(26px);
+      }
+
+      .lang-text {
+        position: absolute;
+        font-size: 9px;
+        font-weight: 600;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+      }
+
+      .lang-text.en {
+        left: 6px;
+        opacity: 1;
+        color: var(--white-60);
+      }
+
+      .lang-toggle[data-lang="fa"] .lang-text.en {
+        opacity: 0.3;
+      }
+
+      .lang-text.fa {
+        right: 6px;
+        opacity: 0.3;
+        color: var(--white-60);
+      }
+
+      .lang-toggle[data-lang="fa"] .lang-text.fa {
+        opacity: 1;
       }
       
       .logo {
@@ -1833,6 +2355,33 @@ function toggleSettingsHistory() {
         opacity: 0;
         visibility: hidden;
       }
+
+      .btn-copy-code {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid var(--stroke);
+        border-radius: 8px;
+        color: var(--white-60);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        transition: all 0.2s ease;
+        opacity: 0.7;
+      }
+
+      .btn-copy-code:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--stroke-hover);
+        color: var(--white);
+        transform: scale(1.05);
+      }
       
       .message-content:hover .btn-copy-message {
         opacity: 1;
@@ -1940,6 +2489,7 @@ function toggleSettingsHistory() {
         cursor: pointer;
         user-select: none;
         transition: background 0.2s;
+        position: relative;
       }
       
       .output-section-header:hover {
@@ -1974,12 +2524,21 @@ function toggleSettingsHistory() {
       }
       
       .output-image {
-        max-width: 100%;
+        max-width: 300px;
+        width: 100%;
+        height: auto;
         border-radius: 12px;
         border: 1px solid var(--stroke);
         background: rgba(255, 255, 255, 0.02);
         display: block;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .output-image:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
       }
       
       .output-code {
@@ -2402,7 +2961,57 @@ function toggleSettingsHistory() {
         color: var(--white-40);
         margin: 0 5px;
     }
+    .google-signup-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        background: #ffffff;
+        color: #333333;
+        text-decoration: none;
+        border: 1px solid #dadce0;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .google-signup-btn:hover {
+        background: #f8f9fa;
+        border-color: #c4c4c4;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    .google-signup-btn svg {
+        flex-shrink: 0;
+    }
+    .divider {
+        position: relative;
+        text-align: center;
+        margin: 20px 0;
+        color: var(--white-50);
+        font-size: 14px;
+    }
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--stroke);
+    }
+    .divider span {
+        background: var(--bg-black);
+        padding: 0 16px;
+        position: relative;
+        z-index: 1;
+    }
     </style>
+
 
   </body>
 

@@ -4,6 +4,9 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from allauth.socialaccount.models import SocialAccount
+from allauth.account.signals import user_signed_up
+from django.db import models
 import os
 import json
 import time
@@ -11,7 +14,12 @@ import requests
 import re
 import io
 import sys
-from .models import ChatSession, ChatMessage, UserProfile
+import base64
+import matplotlib
+matplotlib.use('Agg')  # استفاده از backend بدون GUI
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from .models import ChatSession, ChatMessage, UserProfile, Review
 from django.contrib.auth.models import User
 
 # Chat history is now stored in database using Django models
@@ -24,6 +32,106 @@ try:
 except AttributeError:
     # اگر stdout قبلاً wrapper شده باشد
     pass
+
+def render_python_code_to_image(python_code):
+    """رندر کردن کد پایتون matplotlib به تصویر base64"""
+    try:
+        import numpy as np
+        import matplotlib.patches as patches
+        import re
+
+        # پاک کردن plt.show() و سایر دستورات نمایش از کد
+        python_code = re.sub(r'plt\.show\(\)', '', python_code)
+        python_code = re.sub(r'plt\.show\(\s*\)', '', python_code)
+
+        # پاک کردن markdown code blocks اگر وجود داشته باشد
+        python_code = re.sub(r'```\w*\n?', '', python_code)
+        python_code = re.sub(r'```', '', python_code)
+
+        # پاک کردن کاراکترهای غیر ASCII از کد
+        python_code = ''.join(c for c in python_code if ord(c) < 128)
+
+        # اصلاح مشکلات syntax رایج در کد matplotlib
+        # جایگزینی patterns مشکل‌ساز
+        python_code = python_code.replace('\\k-', "'k-'")
+        python_code = python_code.replace('k-\\\\', "'k-'")
+        python_code = python_code.replace('k-\\\\\\\\', "'k-'")  # برای موارد با 4 backslash
+        # پاک کردن backslashهای اضافه در انتهای خط
+        lines = python_code.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            line = line.rstrip()
+            if line.endswith('\\\\'):
+                line = line[:-2]  # حذف 2 backslash از انتها
+            cleaned_lines.append(line)
+        python_code = '\n'.join(cleaned_lines)
+        # پاک کردن backslashهای اضافه
+        python_code = python_code.replace('\\\\', '\\')
+        # پاک کردن trailing backslashes
+        lines = python_code.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            line = line.rstrip()
+            if line.endswith('\\\\'):
+                line = line[:-1]
+            cleaned_lines.append(line)
+        python_code = '\n'.join(cleaned_lines)
+
+        # ایجاد یک namespace جداگانه برای اجرای کد
+        namespace = {
+            'plt': plt,
+            'matplotlib': matplotlib,
+            'np': np,
+            'patches': patches,
+            '__builtins__': __builtins__,
+        }
+
+        # بستن تمام figureهای قبلی
+        plt.close('all')
+
+        # اجرای کد پایتون
+        try:
+            # چک کردن syntax قبل از اجرا
+            compile(python_code, '<string>', 'exec')
+        except SyntaxError as syntax_error:
+            print("Syntax error in code:", str(syntax_error))
+            # اگر syntax error دارد، تصویر تولید نکن
+            return None
+
+        try:
+            exec(python_code, namespace)
+        except Exception as exec_error:
+            print("Error executing Python code:", str(exec_error))
+            raise exec_error
+
+        # گرفتن figure فعلی
+        fig = plt.gcf()
+
+        if fig is None or len(fig.axes) == 0:
+            plt.close('all')
+            return None
+
+        # تبدیل به تصویر
+        canvas = FigureCanvasAgg(fig)
+        buf = io.BytesIO()
+        canvas.print_png(buf)
+        buf.seek(0)
+
+        # تبدیل به base64
+        image_data = buf.read()
+        image_base64 = base64.b64encode(image_data).decode('ascii')
+
+        # بستن figure برای آزاد کردن حافظه
+        plt.close(fig)
+        plt.close('all')
+
+        return f"data:image/png;base64,{image_base64}"
+    except Exception as e:
+        print("Error rendering Python code:", str(e))
+        import traceback
+        traceback.print_exc()
+        plt.close('all')
+        return None
 
 SYSTEM_PROMPT = (
     "شما یک تولیدکننده کد برای مدارهای الکتریکی هستید.\n"
@@ -635,6 +743,11 @@ def api_chat_message(request):
                     "imageBase64": None
                 }
 
+            # اگر کد پایتون وجود دارد، تصویر را تولید کن
+            if assistant_response_content.get("pythonCode"):
+                image_base64 = render_python_code_to_image(assistant_response_content["pythonCode"])
+                assistant_response_content["imageBase64"] = image_base64
+
         except Exception as llm_error:
             # اگر اتصال به LLM شکست خورد، از پاسخ پیش‌فرض استفاده کن
             assistant_response_content = {
@@ -748,10 +861,10 @@ def signup_view(request):
             return redirect('index') # به صفحه اصلی چت هدایت شود
         else:
             # اگر فرم نامعتبر بود، ارورها را به قالب بفرستید
-            return render(request, 'index.html', {'form': form, 'show_signup': True})
+            return render(request, 'index.html', {'signup_form': form})
     else:
         form = UserCreationForm()
-    return render(request, 'index.html', {'form': form, 'show_signup': True})
+    return render(request, 'index.html', {'signup_form': form})
 
 def login_view(request):
     if request.method == 'POST':
@@ -772,43 +885,442 @@ def login_view(request):
     else:
         form = AuthenticationForm()
     return render(request, 'index.html', {'login_form': form, 'show_login': True})
-
-def signup_view(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            UserProfile.objects.create(user=user)
-            login(request, user)
-            return redirect('index') # به صفحه اصلی چت هدایت شود
-        else:
-            # اگر فرم نامعتبر بود، ارورها را به قالب بفرستید
-            return render(request, 'index.html', {'form': form, 'show_signup': True})
-    else:
-        form = UserCreationForm()
-    return render(request, 'index.html', {'form': form, 'show_signup': True})
-
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('index') # به صفحه اصلی چت هدایت شود
-            else:
-                # پیام خطا برای نام کاربری/رمز عبور اشتباه
-                return render(request, 'index.html', {'login_form': form, 'show_login': True, 'error_message': 'نام کاربری یا رمز عبور اشتباه است.'})
-        else:
-            # اگر فرم نامعتبر بود، ارورها را به قالب بفرستید
-            return render(request, 'index.html', {'login_form': form, 'show_login': True})
-    else:
-        form = AuthenticationForm()
-    return render(request, 'index.html', {'login_form': form, 'show_login': True})
-
 @login_required
 def logout_view(request):
     logout(request)
     return redirect('landing')
+
+# API Endpoints برای Google Sign-In
+from django.views.decorators.http import require_POST
+import google.auth.transport.requests
+import google.oauth2.id_token
+
+@require_POST
+def google_client_id_api(request):
+    """API برای دریافت Google Client ID"""
+    client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+    return JsonResponse({'client_id': client_id})
+
+@require_POST
+def google_signin_api(request):
+    """API برای پردازش Google Sign-In"""
+    try:
+        data = json.loads(request.body)
+        credential = data.get('credential')
+        action = data.get('action', 'login')
+
+        if not credential:
+            return JsonResponse({'error': 'Credential is required'}, status=400)
+
+        # Verify the token
+        try:
+            id_info = google.oauth2.id_token.verify_oauth2_token(
+                credential,
+                google.auth.transport.requests.Request(),
+                os.getenv('GOOGLE_CLIENT_ID')
+            )
+        except ValueError as e:
+            return JsonResponse({'error': 'Invalid token'}, status=400)
+
+        # Extract user information
+        google_user_id = id_info['sub']
+        email = id_info['email']
+        name = id_info.get('name', '')
+        given_name = id_info.get('given_name', '')
+        family_name = id_info.get('family_name', '')
+        picture = id_info.get('picture', '')
+
+        # Check if user already exists with this email
+        user = None
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            pass
+
+        # Check if there's a social account for this Google user
+        social_account = None
+        try:
+            social_account = SocialAccount.objects.get(
+                provider='google',
+                uid=google_user_id
+            )
+            user = social_account.user
+        except SocialAccount.DoesNotExist:
+            pass
+
+        if user:
+            # User exists, log them in
+            login(request, user)
+            return JsonResponse({
+                'success': True,
+                'redirect_url': '/',
+                'message': f'خوش آمدید {given_name}'
+            })
+        else:
+            # User doesn't exist, create new user if action is signup
+            if action == 'signup':
+                # Create new user
+                username = email.split('@')[0]
+                # Make sure username is unique
+                base_username = username
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}_{counter}"
+                    counter += 1
+
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    first_name=given_name,
+                    last_name=family_name,
+                    is_active=True
+                )
+
+                # Create UserProfile
+                UserProfile.objects.get_or_create(user=user)
+
+                # Create SocialAccount
+                social_account = SocialAccount.objects.create(
+                    user=user,
+                    provider='google',
+                    uid=google_user_id,
+                    extra_data={
+                        'email': email,
+                        'name': name,
+                        'given_name': given_name,
+                        'family_name': family_name,
+                        'picture': picture
+                    }
+                )
+
+                # Log the user in
+                login(request, user)
+
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': '/',
+                    'message': f'حساب شما با موفقیت ایجاد شد. خوش آمدید {given_name}'
+                })
+            else:
+                # User doesn't exist and action is login
+                return JsonResponse({
+                    'error': 'حساب کاربری یافت نشد. لطفاً ابتدا ثبت نام کنید.'
+                }, status=404)
+
+    except Exception as e:
+        print(f"Google signin error: {e}")
+        return JsonResponse({'error': 'خطا در پردازش ورود'}, status=500)
+
+# Signal handler برای ایجاد UserProfile وقتی کاربر با social account ثبت نام می‌کند
+from django.dispatch import receiver
+
+@receiver(user_signed_up)
+def create_user_profile_on_social_signup(request, user, **kwargs):
+    """ایجاد UserProfile برای کاربرانی که با social account ثبت نام می‌کنند"""
+    UserProfile.objects.get_or_create(user=user)
+
+# ویوهای مرتبط با نظرات و امتیازدهی
+def reviews_page(request):
+    """صفحه اصلی نظرات و امتیازدهی - قابل دسترسی برای همه"""
+    return render(request, 'reviews.html')
+
+def reviews_list(request):
+    """صفحه نمایش لیست نظرات کاربران"""
+    reviews = Review.objects.filter(is_approved=True).order_by('-created_at')
+    context = {
+        'reviews': reviews,
+    }
+    return render(request, 'reviews_list.html', context)
+
+def submit_review(request):
+    """ثبت نظر و امتیاز جدید - برای کاربران لاگین کرده و مهمانان"""
+    print(f"submit_review called: method={request.method}, user={request.user}")  # Debug log
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '').strip()
+
+        if not rating or not rating.isdigit() or not (1 <= int(rating) <= 5):
+            return JsonResponse({'error': 'امتیاز باید بین 1 تا 5 باشد'}, status=400)
+
+        # اگر کاربر لاگین کرده باشد
+        if request.user.is_authenticated:
+            guest_name = None
+            guest_email = None
+            selected_message_id = request.POST.get('chat_history_message')
+
+            # بررسی اینکه آیا کاربر قبلاً نظر داده یا نه
+            existing_review = Review.objects.filter(user=request.user).first()
+            if existing_review:
+                existing_review.rating = int(rating)
+                existing_review.comment = comment
+                if selected_message_id:
+                    # ذخیره فقط message_id
+                    try:
+                        from .models import ChatMessage
+                        message = ChatMessage.objects.get(
+                            id=int(selected_message_id),
+                            role='assistant',
+                            session__user=request.user
+                        )
+                        existing_review.chat_history_message_id = message.id
+                    except:
+                        pass
+                existing_review.is_approved = False  # نیاز به تأیید مجدد دارد
+                existing_review.save()
+                message = 'نظر شما بروزرسانی شد و منتظر تأیید مدیر است.'
+            else:
+                chat_history_message_id = None
+
+                if selected_message_id:
+                    # ذخیره فقط message_id
+                    try:
+                        from .models import ChatMessage
+                        message = ChatMessage.objects.get(
+                            id=int(selected_message_id),
+                            role='assistant',
+                            session__user=request.user
+                        )
+                        chat_history_message_id = message.id
+                    except:
+                        pass
+
+                Review.objects.create(
+                    user=request.user,
+                    rating=int(rating),
+                    comment=comment,
+                    chat_history_message_id=chat_history_message_id,
+                    is_approved=False
+                )
+                message = 'نظر شما ثبت شد و منتظر تأیید مدیر است.'
+        else:
+            # کاربر مهمان است
+            guest_name = request.POST.get('guest_name', '').strip()
+            guest_email = request.POST.get('guest_email', '').strip()
+
+            if not guest_name:
+                return JsonResponse({'error': 'لطفاً نام خود را وارد کنید'}, status=400)
+
+            # بررسی اعتبار ایمیل اگر وارد شده
+            if guest_email and not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', guest_email):
+                return JsonResponse({'error': 'ایمیل وارد شده معتبر نیست'}, status=400)
+
+            Review.objects.create(
+                rating=int(rating),
+                comment=comment,
+                guest_name=guest_name,
+                guest_email=guest_email,
+                is_approved=False
+            )
+            message = 'نظر شما ثبت شد و منتظر تأیید مدیر است.'
+
+        return JsonResponse({'success': True, 'message': message})
+
+    return JsonResponse({'error': 'متد درخواست نامعتبر است'}, status=405)
+
+def reviews_stats(request):
+    """آمار نظرات برای نمایش در لندینگ پیج"""
+    total_reviews = Review.objects.filter(is_approved=True).count()
+    avg_rating = Review.objects.filter(is_approved=True).aggregate(
+        avg=models.Avg('rating')
+    )['avg'] or 0
+
+    rating_counts = {}
+    rating_percentages = {}
+    for i in range(1, 6):
+        count = Review.objects.filter(is_approved=True, rating=i).count()
+        rating_counts[i] = count
+        rating_percentages[i] = round((count / total_reviews * 100), 1) if total_reviews > 0 else 0
+
+    return JsonResponse({
+        'total_reviews': total_reviews,
+        'average_rating': round(avg_rating, 1),
+        'rating_counts': rating_counts,
+        'rating_percentages': rating_percentages
+    })
+
+def get_featured_reviews(request):
+    """دریافت نظرات برجسته برای نمایش در لندینگ پیج"""
+    # گرفتن 2 نظر تأیید شده اخیر
+    reviews = Review.objects.filter(is_approved=True).order_by('-created_at')[:2]
+
+    reviews_data = []
+    for review in reviews:
+        has_image = False
+        if review.chat_history_message_id:
+            try:
+                # چک کردن اینکه پیام وجود دارد، قابل دسترسی است و کد پایتون دارد
+                message = ChatMessage.objects.get(
+                    id=review.chat_history_message_id,
+                    role='assistant'
+                )
+
+                # چک کردن کد پایتون
+                python_code = None
+                if message.content_json and isinstance(message.content_json, dict):
+                    python_code = message.content_json.get('pythonCode') or message.content_json.get('python_code')
+                if not python_code and message.content_text:
+                    if 'import matplotlib' in message.content_text or 'def draw_circuit' in message.content_text:
+                        python_code = message.content_text
+
+                has_image = bool(python_code)
+            except ChatMessage.DoesNotExist:
+                has_image = False
+
+        reviews_data.append({
+            'id': review.id,
+            'author_name': review.author_name,
+            'rating': review.rating,
+            'comment': review.comment,
+            'created_at': review.created_at.strftime('%Y-%m-%d'),
+            'stars_display': review.stars_display,
+            'user_type': 'کاربر ثبت‌شده' if review.user else 'مهمان',
+            'has_image': has_image,
+            'chat_history_message_id': review.chat_history_message_id
+        })
+
+    return JsonResponse({'reviews': reviews_data})
+
+@login_required
+def get_user_chat_history(request):
+    """دریافت چت هیستوری کاربر برای انتخاب در نظرات - همه تصاویر رندر شده"""
+    chat_sessions = ChatSession.objects.filter(user=request.user).order_by('-last_message_time')
+
+    sessions_data = []
+    for session in chat_sessions:
+        # گرفتن همه پیام‌های assistant که تصویر دارند (یا می‌توانند رندر شوند)
+        assistant_messages = ChatMessage.objects.filter(
+            session=session,
+            role='assistant'
+        ).exclude(
+            # پیام‌هایی که نه کد پایتون دارند نه تصویر رندر شده
+            models.Q(content_json__isnull=True) &
+            models.Q(content_text__isnull=True)
+        )
+
+        messages_with_images = []
+        for message in assistant_messages:
+            # چک کردن کد پایتون و تصویر
+            python_code = None
+            image_base64 = None
+
+            if message.content_json and isinstance(message.content_json, dict):
+                python_code = message.content_json.get('pythonCode') or message.content_json.get('python_code')
+                image_base64 = message.content_json.get('imageBase64') or message.content_json.get('image_base64')
+
+            if not python_code and message.content_text:
+                # چک کردن آیا content_text کد پایتون است
+                if 'import matplotlib' in message.content_text or 'def draw_circuit' in message.content_text:
+                    python_code = message.content_text
+
+            # اگر کد پایتون دارد یا تصویر رندر شده دارد
+            if python_code or image_base64:
+                # اگر تصویر وجود ندارد، سعی کن رندر کن
+                if not image_base64 and python_code:
+                    try:
+                        image_base64 = render_python_code_to_image(python_code)
+                        # ذخیره تصویر رندر شده برای استفاده‌های بعدی
+                        if image_base64 and message.content_json:
+                            message.content_json['imageBase64'] = image_base64
+                            message.save(update_fields=['content_json'])
+                    except Exception as e:
+                        print(f"Error rendering image for message {message.id}: {e}")
+                        continue
+
+                if image_base64:  # فقط پیام‌هایی که تصویر دارند
+                    messages_with_images.append({
+                    'message_id': message.id,
+                        'image_base64': image_base64,
+                        'session_name': session.display_name,
+                        'session_time': session.last_message_time,
+                        'created_at': message.id  # برای ترتیب زمانی
+                })
+
+        if messages_with_images:
+            # مرتب کردن بر اساس زمان ایجاد (جدیدترین اول)
+            messages_with_images.sort(key=lambda x: x['created_at'], reverse=True)
+
+            sessions_data.append({
+                'session_id': session.session_id,
+                'display_name': session.display_name,
+                'last_message_time': session.last_message_time,
+                'messages': messages_with_images
+            })
+
+    # مرتب کردن سشن‌ها بر اساس آخرین پیام
+    sessions_data.sort(key=lambda x: x['last_message_time'], reverse=True)
+
+    return JsonResponse({'chat_sessions': sessions_data})
+
+@csrf_exempt
+def render_python_code_api(request):
+    """API برای رندر کردن کد پایتون به تصویر"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            python_code = data.get('python_code')
+            
+            if not python_code:
+                return JsonResponse({'error': 'کد پایتون ارسال نشد'}, status=400)
+            
+            image_base64 = render_python_code_to_image(python_code)
+
+            if image_base64:
+                return JsonResponse({'image_base64': image_base64})
+            else:
+                return JsonResponse({'error': 'کد پایتون قابل رندر نیست - ممکن است نادرست باشد'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'متد درخواست نامعتبر است'}, status=405)
+
+def get_chat_message_content(request, message_id):
+    """دریافت محتوای یک پیام خاص از چت و رندر کردن کد پایتون به تصویر
+    این API برای نمایش عمومی در نظرات استفاده می‌شود، پس نیاز به authentication ندارد
+    اما فقط برای پیام‌های assistant که در نظرات استفاده شده‌اند"""
+    try:
+        # پیام باید حتماً از نوع assistant باشد
+        message = ChatMessage.objects.get(
+            id=int(message_id),
+            role='assistant'
+        )
+
+        # بررسی اینکه آیا این پیام در یک نظر تأیید شده استفاده شده است
+        from .models import Review
+        review_exists = Review.objects.filter(
+            chat_history_message_id=message_id,
+            is_approved=True
+        ).exists()
+        if not review_exists:
+            return JsonResponse({'error': 'دسترسی مجاز نیست'}, status=403)
+        
+        # گرفتن کد پایتون و تصویر از content_json
+        python_code = None
+        image_base64 = None
+
+        if message.content_json and isinstance(message.content_json, dict):
+            python_code = message.content_json.get('pythonCode') or message.content_json.get('python_code')
+            image_base64 = message.content_json.get('imageBase64') or message.content_json.get('image_base64')
+
+        if not python_code and message.content_text:
+            # چک کردن آیا content_text کد پایتون است
+            if 'import matplotlib' in message.content_text or 'def draw_circuit' in message.content_text:
+                python_code = message.content_text
+
+        # اگر کد پایتون داریم، سعی کنیم آن را رندر کنیم
+        image_base64 = None
+        if python_code:
+            try:
+                image_base64 = render_python_code_to_image(python_code)
+            except Exception as e:
+                print(f"Error rendering image for message {message_id}: {e}")
+                image_base64 = None
+
+        return JsonResponse({
+            'python_code': python_code,
+            'image_base64': image_base64,
+            'session_name': message.session.display_name if message.session else None
+        })
+    except ChatMessage.DoesNotExist:
+        return JsonResponse({'error': 'پیام یافت نشد'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

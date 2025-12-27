@@ -33,6 +33,10 @@ if os.path.exists('/opt/apps'):  # محیط سرور
 else:  # محیط محلی
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
+# تنظیمات رسانه‌ها (برای آپلود تصاویر)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Application definition
 
@@ -47,7 +51,11 @@ INSTALLED_APPS = [
     'django_jalali',
     'django_extensions',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -149,7 +158,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # تنظیم DEBUG بر اساس متغیر محیطی
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = True  # فعال کردن DEBUG برای توسعه
 
 # تنظیم CSRF_TRUSTED_ORIGINS بر اساس محیط
 if os.path.exists('/opt/apps'):  # محیط سرور
@@ -163,6 +172,55 @@ else:  # محیط محلی
     ]
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'sk-aaaf76c4d38549a79a3b4eb9a81f762c')
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/chat/'
 LOGOUT_REDIRECT_URL = '/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Django Allauth settings
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+            'prompt': 'select_account'
+        },
+        'OAUTH_PKCE_ENABLED': True,
+        'APP': {
+            'client_id': '204583816982-hglh6t07c6lq18trjcbv1utuckp6pln0.apps.googleusercontent.com',
+            'secret': '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',
+            'key': ''
+        }
+    }
+}
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+# تنظیمات allauth
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SITE_ID = 1
+
+# تنظیمات اضافی allauth
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # یا 'mandatory' یا 'optional'
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+
+# Email settings (اختیاری برای توسعه)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
