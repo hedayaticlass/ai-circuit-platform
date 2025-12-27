@@ -5,7 +5,11 @@ schemdraw
 openai
 cairosvg
 matplotlib
+numpy
 django-jalali
 django-extensions
 djangorestframework
 django-cors-headers
+django-allauth==65.0.1
+django-allauth[socialaccount]==65.0.1
+google-auth

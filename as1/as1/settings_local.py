@@ -5,6 +5,26 @@
 
 from .settings import *
 import os
+from pathlib import Path
+
+# Override TEMPLATES for local development
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            BASE_DIR / 'templates',  # as1/templates
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
 # تنظیمات محلی برای توسعه
 DEBUG = True
@@ -38,3 +58,16 @@ if os.getenv('OPENAI_API_KEY'):
 else:
     # مقدار پیش‌فرض برای محیط محلی (در محیط واقعی تنظیم نکنید)
     OPENAI_API_KEY = 'your-local-api-key-here'
+
+# Google OAuth settings for local development
+if os.getenv('GOOGLE_CLIENT_ID'):
+    GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+else:
+    # مقدار پیش‌فرض برای محیط محلی (در محیط واقعی تنظیم نکنید)
+    GOOGLE_CLIENT_ID = '123456789-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com'
+
+if os.getenv('GOOGLE_CLIENT_SECRET'):
+    GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+else:
+    # مقدار پیش‌فرض برای محیط محلی (در محیط واقعی تنظیم نکنید)
+    GOOGLE_CLIENT_SECRET = 'your-google-client-secret-here'

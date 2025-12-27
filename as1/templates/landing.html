@@ -55,9 +55,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        backdrop-filter: blur(10px);
-        background: rgba(10, 10, 10, 0.8);
-        border-bottom: 1px solid var(--stroke);
+        
         position: fixed;
         top: 0;
         left: 0;
@@ -80,8 +78,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
         backdrop-filter: blur(10px);
+      }
+
+      .landing-logo-icon svg {
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
       }
 
       .landing-logo h1 {
@@ -94,12 +95,92 @@
       .landing-nav {
         display: flex;
         gap: 1rem;
+        align-items: center;
+      }
+
+      .language-toggle {
+        display: flex;
+        align-items: center;
+        margin-right: 1rem;
+      }
+
+      .lang-toggle {
+        position: relative;
+        width: 60px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--stroke);
+        border-radius: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        padding: 2px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+      }
+
+      .lang-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--stroke-hover);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+      }
+
+      .lang-slider {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 22px;
+        height: 22px;
+        background: var(--white-20);
+        border: 1px solid var(--white-50);
+        border-radius: 11px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--white);
+      }
+
+      .lang-toggle[data-lang="fa"] .lang-slider {
+        transform: translateX(32px);
+      }
+
+      .lang-text {
+        position: absolute;
+        font-size: 10px;
+        font-weight: 600;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+      }
+
+      .lang-text.en {
+        left: 8px;
+        opacity: 1;
+        color: var(--white-60);
+      }
+
+      .lang-toggle[data-lang="fa"] .lang-text.en {
+        opacity: 0.3;
+      }
+
+      .lang-text.fa {
+        right: 8px;
+        opacity: 0.3;
+        color: var(--white-60);
+      }
+
+      .lang-toggle[data-lang="fa"] .lang-text.fa {
+        opacity: 1;
       }
 
       .btn-landing {
         background: transparent;
         backdrop-filter: blur(10px);
-        border: 1px solid var(--stroke);
+        border: none;
         border-radius: 10px;
         color: var(--white-80);
         cursor: pointer;
@@ -114,8 +195,7 @@
       }
 
       .btn-landing:hover {
-        background: rgba(255, 255, 255, 0.01);
-        border-color: var(--stroke-hover);
+        background: rgba(255, 255, 255, 0.05);
         color: var(--white);
         transform: translateY(-1px);
       }
@@ -328,6 +408,703 @@
         color: var(--white-60);
       }
 
+      .reviews-section {
+        padding: 6rem 2rem;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .reviews-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .reviews-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 3rem;
+      }
+
+      .reviews-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+      }
+
+      .reviews-stats .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        min-width: 200px;
+        transition: all 0.3s ease;
+      }
+
+      .reviews-stats .stat-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--stroke-hover);
+        transform: translateY(-5px);
+      }
+
+      .reviews-stats .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 0.5rem;
+      }
+
+      .reviews-stats .stat-label {
+        font-size: 1rem;
+        color: var(--white-60);
+        font-weight: 500;
+      }
+
+      /* سکشن نظرات ویژه - تم مینیمال سیاه سفید */
+      .featured-reviews-section {
+        margin-bottom: 4rem;
+        padding: 0 2rem;
+      }
+
+      .featured-reviews-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .featured-reviews-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 0 1rem;
+      }
+
+      .featured-reviews-header h3 {
+        font-size: 2.2rem;
+        font-weight: 500;
+        color: var(--white);
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.5px;
+        position: relative;
+        display: inline-block;
+      }
+
+      .featured-reviews-header h3::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 1px;
+        background: var(--white-40);
+      }
+
+      .featured-reviews-header p {
+        color: var(--white-60);
+        line-height: 1.5;
+        font-size: 1rem;
+        font-weight: 400;
+        max-width: 480px;
+        margin: 0 auto;
+      }
+
+      .featured-reviews-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .featured-review-card {
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      .featured-review-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--stroke-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .featured-review-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+
+      .featured-review-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      @keyframes fadeInUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .featured-review-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .featured-review-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--stroke);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--white-80);
+        flex-shrink: 0;
+      }
+
+      .featured-review-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .featured-review-info h4 {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--white);
+        margin: 0 0 0.25rem 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .featured-review-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--white-50);
+      }
+
+      .featured-review-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: 1px solid transparent;
+      }
+
+      .featured-review-badge.user {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--white-70);
+        border-color: var(--stroke);
+      }
+
+      .featured-review-badge.guest {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--white-60);
+        border-color: var(--stroke);
+      }
+
+      .featured-review-rating {
+        font-size: 1.4rem;
+        margin: 1rem 0;
+        text-align: center;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--stroke);
+        border-radius: 10px;
+        direction: ltr;
+        display: inline-block;
+        min-width: 100px;
+        font-weight: 400;
+      }
+
+      .featured-review-comment {
+        color: var(--white-70);
+        line-height: 1.6;
+        font-size: 14px;
+        margin: 1.25rem 0;
+        font-style: normal;
+        position: relative;
+        padding-left: 1rem;
+      }
+
+      .featured-review-comment::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--stroke);
+        border-radius: 1px;
+      }
+
+      .featured-review-image {
+        margin-top: 1.5rem;
+        text-align: center;
+      }
+
+      .featured-review-image img {
+        max-width: 100%;
+        max-height: 180px;
+        border-radius: 8px;
+        border: 1px solid var(--stroke);
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.01);
+      }
+
+      .featured-review-image-label {
+        display: inline-block;
+        font-size: 11px;
+        color: var(--white-50);
+        margin-top: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+      }
+
+      /* سکشن آمار - تم مینیمال */
+      .reviews-stats-section {
+        background: rgba(255, 255, 255, 0.01);
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        border: 1px solid var(--stroke);
+        margin-top: 2rem;
+      }
+
+      .reviews-stats-hero {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      .reviews-stats-hero h3 {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: var(--white);
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.3px;
+      }
+
+      .reviews-stats-hero p {
+        color: var(--white-60);
+        line-height: 1.5;
+        font-size: 1rem;
+        font-weight: 400;
+        max-width: 450px;
+        margin: 0 auto;
+      }
+
+      .reviews-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .reviews-stats .stat-card {
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        min-width: 160px;
+        transition: all 0.3s ease;
+      }
+
+      .reviews-stats .stat-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--stroke-hover);
+        transform: translateY(-2px);
+      }
+
+      .reviews-stats .stat-number {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+      }
+
+      .reviews-stats .stat-label {
+        font-size: 0.9rem;
+        color: var(--white-60);
+        font-weight: 400;
+      }
+
+      /* Progress Bar Styles for Ratings */
+      .reviews-ratings-breakdown {
+        width: 100%;
+      }
+
+      .rating-stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        border: 1px solid var(--stroke);
+      }
+
+      .rating-stat-main {
+        text-align: center;
+        flex: 1;
+      }
+
+      .rating-stat-main .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 0.5rem;
+      }
+
+      .rating-stat-main .stat-label {
+        font-size: 1rem;
+        color: var(--white-70);
+        font-weight: 500;
+      }
+
+      .rating-stat-secondary {
+        text-align: center;
+        flex: 1;
+      }
+
+      .rating-stat-secondary .stat-number {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--white-80);
+        margin-bottom: 0.25rem;
+      }
+
+      .rating-stat-secondary .stat-label {
+        font-size: 0.85rem;
+        color: var(--white-60);
+      }
+
+      .rating-progress-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .rating-progress-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.01);
+        border-radius: 8px;
+        border: 1px solid var(--stroke);
+        transition: all 0.3s ease;
+      }
+
+      .rating-progress-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--stroke-hover);
+        transform: translateX(5px);
+      }
+
+      .rating-stars {
+        font-size: 1.1rem;
+        color: var(--white-70);
+        min-width: 80px;
+        text-align: center;
+        direction: ltr;
+      }
+
+      .rating-bar-container {
+        flex: 1;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .rating-bar {
+        height: 100%;
+        background: linear-gradient(90deg,
+          #ffd700 0%,
+          #ffed4e 25%,
+          #44ff44 50%,
+          #44ff44 75%,
+          #ffd700 100%);
+        background-size: 200% 100%;
+        animation: ratingBarGlow 2s ease-in-out infinite;
+        border-radius: 4px;
+        transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+
+      .rating-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg,
+          rgba(255, 255, 255, 0.3) 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          rgba(255, 255, 255, 0.3) 100%);
+        animation: ratingBarShimmer 2s ease-in-out infinite;
+        border-radius: inherit;
+      }
+
+      @keyframes ratingBarGlow {
+        0%, 100% {
+          background-position: 0% 50%;
+          box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+        }
+        50% {
+          background-position: 100% 50%;
+          box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+      }
+
+      @keyframes ratingBarShimmer {
+        0%, 100% {
+          opacity: 0;
+          transform: translateX(-100%);
+        }
+        50% {
+          opacity: 1;
+          transform: translateX(0%);
+        }
+      }
+
+      .rating-percentage {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--white);
+        min-width: 45px;
+        text-align: center;
+      }
+
+      .rating-count {
+        font-size: 0.8rem;
+        color: var(--white-50);
+        min-width: 35px;
+        text-align: center;
+      }
+
+      /* Special styling for 5-star rating */
+      .rating-progress-item:first-child {
+        background: rgba(255, 215, 0, 0.05);
+        border-color: rgba(255, 215, 0, 0.2);
+      }
+
+      .rating-progress-item:first-child .rating-stars {
+        color: #ffd700;
+      }
+
+      .rating-progress-item:first-child .rating-bar {
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+      }
+
+      .reviews-cta-landing {
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      .reviews-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+      }
+
+      .review-card-landing {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .review-card-landing::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .review-card-landing:hover::before {
+        transform: scaleX(1);
+      }
+
+      .review-card-landing:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--stroke-hover);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .review-card-landing:nth-child(1) { animation-delay: 0.1s; }
+      .review-card-landing:nth-child(2) { animation-delay: 0.2s; }
+      .review-card-landing:nth-child(3) { animation-delay: 0.3s; }
+      .review-card-landing:nth-child(4) { animation-delay: 0.4s; }
+      .review-card-landing:nth-child(5) { animation-delay: 0.5s; }
+      .review-card-landing:nth-child(6) { animation-delay: 0.6s; }
+
+      .review-header-landing {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .review-user-landing {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .review-avatar-landing {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        border: 1px solid var(--stroke);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--white-80);
+        backdrop-filter: blur(10px);
+        position: relative;
+      }
+
+      .review-avatar-landing::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.1));
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: xor;
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+      }
+
+      .review-user-info-landing h4 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--white);
+        margin: 0;
+        margin-bottom: 0.25rem;
+      }
+
+      .review-date-landing {
+        font-size: 12px;
+        color: var(--white-50);
+      }
+
+      .review-badge-landing {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 500;
+        margin-top: 4px;
+      }
+
+      .review-badge-landing.user {
+        background: rgba(68, 255, 68, 0.15);
+        color: #44ff44;
+        border: 1px solid rgba(68, 255, 68, 0.3);
+      }
+
+      .review-badge-landing.guest {
+        background: rgba(255, 136, 0, 0.15);
+        color: #ff8800;
+        border: 1px solid rgba(255, 136, 0, 0.3);
+      }
+
+      .review-rating-landing {
+        font-size: 1.4rem;
+        direction: ltr;
+        display: inline-block;
+        margin-bottom: 1rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        border-radius: 12px;
+      }
+
+      .review-comment-landing {
+        color: var(--white-80);
+        line-height: 1.7;
+        font-size: 14px;
+        margin: 0;
+        font-style: italic;
+        position: relative;
+      }
+
+      .review-comment-landing::before {
+        content: '"';
+        font-size: 2rem;
+        color: rgba(255, 215, 0, 0.3);
+        position: absolute;
+        top: -10px;
+        right: -5px;
+        font-family: serif;
+      }
+
+      .review-image-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 12px;
+        color: var(--white-60);
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        border: 1px solid var(--stroke);
+      }
+
+      .review-image-indicator::before {
+        content: '🖼️';
+        font-size: 14px;
+      }
+
       .cta-section {
         padding: 6rem 2rem;
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
@@ -393,19 +1170,44 @@
 
       /* Floating animation for hero icons */
       @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+        0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+        25% { transform: translateY(-8px) rotate(1.5deg) scale(1.02); }
+        50% { transform: translateY(-15px) rotate(0deg) scale(1.05); }
+        75% { transform: translateY(-8px) rotate(-1.5deg) scale(1.02); }
+      }
+
+      @keyframes circuitGlow {
+        0%, 100% {
+          filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+        }
+        50% {
+          filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 35px rgba(255, 255, 255, 0.5));
+        }
+      }
+
+      @keyframes electricFlow {
+        0% { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: -20; }
+      }
+
+      @keyframes circuitPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
       }
 
       .hero-icon-large {
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 2rem;
-        color: var(--white-60);
+        width: 220px;
+        height: 110px;
+        margin: 0 auto 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        animation: float 3s ease-in-out infinite;
+        animation: float 4s ease-in-out infinite, circuitGlow 3s ease-in-out infinite;
+      }
+
+      .hero-icon-large svg {
+        animation: circuitPulse 1.5s ease-in-out infinite;
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
       }
 
       /* Background decorations */
@@ -445,6 +1247,7 @@
       /* تنظیمات اسکرول برای تمام عناصر */
       .features-section,
       .examples-section,
+      .reviews-section,
       .cta-section {
         scroll-margin-top: 80px; /* جلوگیری از پنهان شدن پشت هدر */
       }
@@ -470,6 +1273,7 @@
 
         .features-section,
         .examples-section,
+        .reviews-section,
         .cta-section {
           padding: 4rem 1rem;
         }
@@ -481,6 +1285,116 @@
 
         .footer-links {
           justify-content: center;
+        }
+
+        .featured-reviews-section {
+          padding: 0 1rem;
+        }
+
+        .featured-reviews-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .featured-reviews-header h3 {
+          font-size: 1.8rem;
+        }
+
+        .featured-review-card {
+          padding: 1.5rem;
+        }
+
+        .featured-review-header {
+          flex-direction: column;
+          text-align: center;
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+        }
+
+        .featured-review-avatar {
+          width: 44px;
+          height: 44px;
+          font-size: 16px;
+        }
+
+        .featured-review-info h4 {
+          font-size: 15px;
+        }
+
+        .featured-review-meta {
+          font-size: 11px;
+          flex-direction: column;
+          gap: 0.5rem;
+          align-items: center;
+        }
+
+        .featured-review-rating {
+          font-size: 1.3rem;
+          padding: 0.6rem 1.2rem;
+          min-width: 90px;
+        }
+
+        .featured-review-comment {
+          font-size: 13px;
+          margin: 1rem 0;
+        }
+
+        .featured-review-image img {
+          max-height: 140px;
+        }
+
+        .reviews-stats-section {
+          padding: 2rem 1rem;
+        }
+
+        .reviews-stats-hero h3 {
+          font-size: 1.6rem;
+        }
+
+        .rating-stats-header {
+          flex-direction: column;
+          gap: 1.5rem;
+          padding: 1rem;
+        }
+
+        .rating-stat-main .stat-number {
+          font-size: 2rem;
+        }
+
+        .rating-stat-secondary .stat-number {
+          font-size: 1.5rem;
+        }
+
+        .rating-progress-item {
+          flex-direction: column;
+          gap: 0.5rem;
+          align-items: flex-start;
+          padding: 1rem;
+        }
+
+        .rating-stars {
+          font-size: 1rem;
+          min-width: auto;
+          align-self: center;
+        }
+
+        .rating-bar-container {
+          width: 100%;
+          height: 10px;
+        }
+
+        .rating-percentage,
+        .rating-count {
+          font-size: 0.85rem;
+          min-width: auto;
+        }
+
+        .reviews-stats {
+          gap: 1rem;
+        }
+
+        .reviews-stats .stat-card {
+          min-width: 150px;
         }
       }
 
@@ -502,9 +1416,33 @@
 
         .features-section,
         .examples-section,
+        .reviews-section,
         .cta-section {
           padding: 3rem 1rem;
         }
+      }
+
+      /* Language-specific styles */
+      html[lang="fa"] .landing-container {
+        direction: rtl;
+      }
+
+      html[lang="en"] .landing-container {
+        direction: ltr;
+      }
+
+      /* Adjust text alignment for English */
+      html[lang="en"] .hero-subtitle,
+      html[lang="en"] .feature-description,
+      html[lang="en"] .example-description,
+      html[lang="en"] .cta-subtitle {
+        text-align: left;
+      }
+
+      /* Adjust margins for English */
+      html[lang="en"] .hero-subtitle {
+        margin-left: 0;
+        margin-right: 0;
       }
 
       @media (max-width: 480px) {
@@ -531,14 +1469,57 @@
       <!-- Header -->
       <header class="landing-header">
         <div class="landing-logo">
-          <div class="landing-logo-icon">⚡</div>
-          <h1>Circuit AI</h1>
+          <div class="landing-logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.1 -0.1 20.2 10.2" width="40" height="20">
+              <defs>
+                <linearGradient id="navbarCircuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0" />
+                  <stop offset="50%" style="stop-color:#ffffff;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+                </linearGradient>
+              </defs>
+              <!-- Background static circuit -->
+              <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                    stroke="rgba(255, 255, 255, 0.4)"
+                    stroke-width="0.15"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round" />
+              <!-- Animated flowing circuit -->
+              <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                    stroke="url(#navbarCircuitGradient)"
+                    stroke-width="0.3"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-dasharray="1,2"
+                    pathLength="100">
+                <animate attributeName="stroke-dashoffset"
+                         values="0;-20"
+                         dur="1.5s"
+                         repeatCount="indefinite" />
+                <animate attributeName="stroke-width"
+                         values="0.3;0.4;0.3"
+                         dur="2s"
+                         repeatCount="indefinite" />
+              </path>
+            </svg>
+          </div>
+          <h1>ᴄɪʀᴄᴜɪᴛ ᴀɪ</h1>
         </div>
         <nav class="landing-nav">
-          <a href="#features" class="btn-landing">ویژگی‌ها</a>
-          <a href="#examples" class="btn-landing">نمونه‌ها</a>
-          <a href="{% url 'login' %}" class="btn-landing">ورود</a>
-          <a href="{% url 'signup' %}" class="btn-primary">شروع کنید</a>
+          <div class="language-toggle">
+            <div class="lang-toggle" data-lang="en">
+              <div class="lang-slider">EN</div>
+              <span class="lang-text en">EN</span>
+              <span class="lang-text fa">FA</span>
+            </div>
+          </div>
+          <a href="#features" class="btn-landing nav-features" data-lang-key="nav-features">ویژگی‌ها</a>
+          <a href="#examples" class="btn-landing nav-examples" data-lang-key="nav-examples">نمونه‌ها</a>
+          <a href="#reviews" class="btn-landing nav-reviews" data-lang-key="nav-reviews">نظرات</a>
+          <a href="{% url 'login' %}" class="btn-landing nav-login" data-lang-key="nav-login">ورود</a>
+          <a href="{% url 'signup' %}" class="btn-primary nav-start" data-lang-key="nav-start">شروع کنید</a>
         </nav>
       </header>
 
@@ -550,17 +1531,55 @@
 
         <div class="hero-content">
           <div class="hero-icon-large">
-            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.1 -0.1 20.2 10.2" width="200" height="100">
+              <defs>
+                <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0">
+                    <animate attributeName="stop-opacity" values="0;0.3;0" dur="2s" repeatCount="indefinite" />
+                  </stop>
+                  <stop offset="50%" style="stop-color:#ffffff;stop-opacity:1">
+                    <animate attributeName="stop-color" values="#ffffff;#e0e0ff;#ffffff" dur="3s" repeatCount="indefinite" />
+                  </stop>
+                  <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0">
+                    <animate attributeName="stop-opacity" values="0;0.3;0" dur="2s" repeatCount="indefinite" />
+                  </stop>
+                </linearGradient>
+              </defs>
+              <!-- Background static circuit -->
+              <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                    stroke="rgba(255, 255, 255, 0.3)"
+                    stroke-width="0.2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round" />
+
+              <!-- Animated flowing circuit -->
+              <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                    stroke="url(#circuitGradient)"
+                    stroke-width="0.4"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-dasharray="2,4"
+                    pathLength="100">
+                <animate attributeName="stroke-dashoffset"
+                         values="0;-30"
+                         dur="1.2s"
+                         repeatCount="indefinite" />
+                <animate attributeName="stroke-width"
+                         values="0.4;0.6;0.4"
+                         dur="1.8s"
+                         repeatCount="indefinite" />
+              </path>
             </svg>
           </div>
-          <h1 class="hero-title">مدار خود را با هوش مصنوعی طراحی کنید</h1>
-          <p class="hero-subtitle">
+          <h1 class="hero-title" data-lang-key="hero-title">مدار خود را با هوش مصنوعی طراحی کنید</h1>
+          <p class="hero-subtitle" data-lang-key="hero-subtitle">
             توضیح مدار الکتریکی خود را به زبان فارسی بنویسید و هوش مصنوعی پیشرفته ما کد کامل پایتون، شبیه‌سازی SPICE و تصویر مدار را برای شما تولید کند.
           </p>
           <div class="hero-buttons">
-            <a href="{% url 'signup' %}" class="btn-primary">همین حالا شروع کنید</a>
-            <a href="#features" class="btn-secondary">بیشتر بدانید</a>
+            <a href="{% url 'signup' %}" class="btn-primary" data-lang-key="start-now">همین حالا شروع کنید</a>
+            <a href="#features" class="btn-secondary" data-lang-key="learn-more">بیشتر بدانید</a>
           </div>
         </div>
       </section>
@@ -568,7 +1587,7 @@
       <!-- Features Section -->
       <section id="features" class="features-section">
         <div class="features-container">
-          <h2 class="features-title">چرا Circuit AI؟</h2>
+          <h2 class="features-title" data-lang-key="why-circuit-ai">چرا Circuit AI؟</h2>
           <div class="features-grid">
             <div class="feature-card">
               <div class="feature-icon">
@@ -578,8 +1597,8 @@
                   <circle cx="12" cy="16" r="1"></circle>
                 </svg>
               </div>
-              <h3 class="feature-title">پردازش هوشمند</h3>
-              <p class="feature-description">
+              <h3 class="feature-title" data-lang-key="intelligent-processing">پردازش هوشمند</h3>
+              <p class="feature-description" data-lang-key="intelligent-processing-desc">
                 هوش مصنوعی پیشرفته ما توضیحات فارسی شما را درک کرده و مدارهای پیچیده را به کد قابل اجرا تبدیل می‌کند.
               </p>
             </div>
@@ -592,8 +1611,8 @@
                   <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
                 </svg>
               </div>
-              <h3 class="feature-title">تصویرسازی مدار</h3>
-              <p class="feature-description">
+              <h3 class="feature-title" data-lang-key="circuit-visualization">تصویرسازی مدار</h3>
+              <p class="feature-description" data-lang-key="circuit-visualization-desc">
                 تولید خودکار تصاویر دقیق و حرفه‌ای از مدارهای شما با استفاده از کتابخانه‌های گرافیکی پیشرفته پایتون.
               </p>
             </div>
@@ -605,8 +1624,8 @@
                   <polyline points="8 6 2 12 8 18"></polyline>
                 </svg>
               </div>
-              <h3 class="feature-title">شبیه‌سازی SPICE</h3>
-              <p class="feature-description">
+              <h3 class="feature-title" data-lang-key="spice-simulation">شبیه‌سازی SPICE</h3>
+              <p class="feature-description" data-lang-key="spice-simulation-desc">
                 تولید کد netlist استاندارد SPICE برای شبیه‌سازی دقیق عملکرد مدار در نرم‌افزارهای مهندسی.
               </p>
             </div>
@@ -621,8 +1640,8 @@
                   <polyline points="10,9 9,9 8,9"></polyline>
                 </svg>
               </div>
-              <h3 class="feature-title">کد کامل پایتون</h3>
-              <p class="feature-description">
+              <h3 class="feature-title" data-lang-key="complete-python-code">کد کامل پایتون</h3>
+              <p class="feature-description" data-lang-key="complete-python-code-desc">
                 دریافت کد پایتون آماده اجرا با تمام توابع رسم المان‌های مدار و اتصالات بین آن‌ها.
               </p>
             </div>
@@ -634,8 +1653,8 @@
                   <polyline points="12,6 12,12 16,14"></polyline>
                 </svg>
               </div>
-              <h3 class="feature-title">پشتیبانی فارسی</h3>
-              <p class="feature-description">
+              <h3 class="feature-title" data-lang-key="persian-support">پشتیبانی فارسی</h3>
+              <p class="feature-description" data-lang-key="persian-support-desc">
                 رابط کاربری کاملاً فارسی با قابلیت درک و پردازش توضیحات مدار به زبان پارسی.
               </p>
             </div>
@@ -649,8 +1668,8 @@
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
               </div>
-              <h3 class="feature-title">ذخیره‌سازی ابری</h3>
-              <p class="feature-description">
+              <h3 class="feature-title" data-lang-key="cloud-storage">ذخیره‌سازی ابری</h3>
+              <p class="feature-description" data-lang-key="cloud-storage-desc">
                 ذخیره امن تاریخچه چت‌ها و پروژه‌های شما در فضای ابری با قابلیت دسترسی از هر دستگاهی.
               </p>
             </div>
@@ -661,7 +1680,7 @@
       <!-- Examples Section -->
       <section id="examples" class="examples-section">
         <div class="examples-container">
-          <h2 class="examples-title">نمونه مدارها</h2>
+          <h2 class="examples-title" data-lang-key="sample-circuits">نمونه مدارها</h2>
           <div class="examples-grid">
             <div class="example-card">
               <div class="example-icon">
@@ -671,8 +1690,8 @@
                   <line x1="7" y1="7" x2="17" y2="7"></line>
                 </svg>
               </div>
-              <h3 class="example-title">فیلترهای الکترونیکی</h3>
-              <p class="example-description">فیلترهای پایین‌گذر، بالا‌گذر، باندگذر و باندstop</p>
+              <h3 class="example-title" data-lang-key="electronic-filters">فیلترهای الکترونیکی</h3>
+              <p class="example-description" data-lang-key="electronic-filters-desc">فیلترهای پایین‌گذر، بالا‌گذر، باندگذر و باندstop</p>
             </div>
 
             <div class="example-card">
@@ -683,8 +1702,8 @@
                   <path d="M1 12h6m6 0h6"></path>
                 </svg>
               </div>
-              <h3 class="example-title">تقویت‌کننده‌ها</h3>
-              <p class="example-description">تقویت‌کننده‌های عملیاتی و ترانزیستوری</p>
+              <h3 class="example-title" data-lang-key="amplifiers">تقویت‌کننده‌ها</h3>
+              <p class="example-description" data-lang-key="amplifiers-desc">تقویت‌کننده‌های عملیاتی و ترانزیستوری</p>
             </div>
 
             <div class="example-card">
@@ -693,8 +1712,8 @@
                   <path d="M3 12h18l-3 3-3-3-3 3-3-3-3 3z"></path>
                 </svg>
               </div>
-              <h3 class="example-title">نوسان‌سازها</h3>
-              <p class="example-description">مدارهای نوسان‌ساز RC، LC و کریستالی</p>
+              <h3 class="example-title" data-lang-key="oscillators">نوسان‌سازها</h3>
+              <p class="example-description" data-lang-key="oscillators-desc">مدارهای نوسان‌ساز RC، LC و کریستالی</p>
             </div>
 
             <div class="example-card">
@@ -705,8 +1724,8 @@
                   <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
                 </svg>
               </div>
-              <h3 class="example-title">مدارهای دیجیتال</h3>
-              <p class="example-description">گیت‌های منطقی، شمارنده‌ها و مدارات ترتیبی</p>
+              <h3 class="example-title" data-lang-key="digital-circuits">مدارهای دیجیتال</h3>
+              <p class="example-description" data-lang-key="digital-circuits-desc">گیت‌های منطقی، شمارنده‌ها و مدارات ترتیبی</p>
             </div>
 
             <div class="example-card">
@@ -715,8 +1734,8 @@
                   <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
                 </svg>
               </div>
-              <h3 class="example-title">مدارهای قدرت</h3>
-              <p class="example-description">رگولاتورها، اینورترها و مدارهای سوئیچینگ</p>
+              <h3 class="example-title" data-lang-key="power-circuits">مدارهای قدرت</h3>
+              <p class="example-description" data-lang-key="power-circuits-desc">رگولاتورها، اینورترها و مدارهای سوئیچینگ</p>
             </div>
 
             <div class="example-card">
@@ -725,8 +1744,56 @@
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                 </svg>
               </div>
-              <h3 class="example-title">و بسیاری دیگر...</h3>
-              <p class="example-description">هر مداری که بتوانید توصیف کنید!</p>
+              <h3 class="example-title" data-lang-key="and-many-more">و بسیاری دیگر...</h3>
+              <p class="example-description" data-lang-key="any-circuit">هر مداری که بتوانید توصیف کنید!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reviews Section -->
+      <section id="reviews" class="reviews-section">
+        <div class="reviews-container">
+          <h2 class="reviews-title" data-lang-key="user-reviews">نظرات کاربران</h2>
+          <div class="reviews-stats" id="landingReviewsStats">
+            <div class="loading">
+              <div class="loading-spinner"></div>
+              <p data-lang-key="loading-stats">بارگذاری آمار...</p>
+            </div>
+          </div>
+          <!-- سکشن نظرات ویژه -->
+          <div class="featured-reviews-section">
+            <div class="featured-reviews-container">
+              <div class="featured-reviews-header">
+                <h3 data-lang-key="recent-reviews">نظرات اخیر</h3>
+                <p data-lang-key="recent-reviews-desc">تازه‌ترین بازخوردهای کاربران از Circuit AI</p>
+            </div>
+
+              <div class="featured-reviews-grid" id="featuredReviewsGrid">
+                <div class="loading">
+                  <div class="loading-spinner"></div>
+                  <p data-lang-key="loading-reviews">بارگذاری نظرات...</p>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- سکشن آمار و CTA -->
+          <div class="reviews-stats-section">
+            <div class="reviews-stats-hero">
+              <h3 data-lang-key="stats-overview">آمار کلی</h3>
+              <p data-lang-key="stats-overview-desc">نظرات تأیید شده و آمار رضایت کاربران</p>
+            </div>
+
+            <div class="reviews-stats" id="landingReviewsStats">
+              <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>در حال بارگذاری آمار...</p>
+              </div>
+            </div>
+
+            <div class="reviews-cta-landing">
+              <a href="{% url 'reviews_list' %}" class="btn-secondary">مشاهده همه نظرات</a>
             </div>
           </div>
         </div>
@@ -735,31 +1802,204 @@
       <!-- CTA Section -->
       <section class="cta-section">
         <div class="cta-content">
-          <h2 class="cta-title">آماده شروع هستید؟</h2>
-          <p class="cta-subtitle">
+          <h2 class="cta-title" data-lang-key="ready-to-start">آماده شروع هستید؟</h2>
+          <p class="cta-subtitle" data-lang-key="cta-subtitle">
             همین حالا حساب کاربری خود را ایجاد کنید و اولین مدار خود را طراحی کنید.
             تمام ابزارهای مورد نیاز را به صورت رایگان در اختیارتان قرار می‌دهیم.
           </p>
-          <a href="{% url 'signup' %}" class="btn-primary">شروع طراحی مدار</a>
+          <a href="{% url 'signup' %}" class="btn-primary" data-lang-key="start-circuit-design">شروع طراحی مدار</a>
         </div>
       </section>
 
       <!-- Footer -->
       <footer class="landing-footer">
         <div class="footer-content">
-          <div class="footer-text">
+          <div class="footer-text" data-lang-key="copyright">
             © 2024 Circuit AI. تمام حقوق محفوظ است.
           </div>
           <div class="footer-links">
-            <a href="#" class="footer-link">درباره ما</a>
-            <a href="#" class="footer-link">تماس با ما</a>
-            <a href="#" class="footer-link">حریم خصوصی</a>
+            <a href="#" class="footer-link" data-lang-key="about-us">درباره ما</a>
+            <a href="#" class="footer-link" data-lang-key="contact-us">تماس با ما</a>
+            <a href="#" class="footer-link" data-lang-key="privacy">حریم خصوصی</a>
           </div>
         </div>
       </footer>
     </div>
 
     <script>
+      // Language translations
+      const translations = {
+        en: {
+          'nav-features': 'Features',
+          'nav-examples': 'Examples',
+          'nav-login': 'Login',
+          'nav-start': 'Start',
+          'hero-title': 'Design your own circuit with artificial intelligence',
+          'hero-subtitle': 'Write your electrical circuit description in Persian and our advanced artificial intelligence will generate the complete Python code, SPICE simulation, and circuit image for you.',
+          'start-now': 'Start now',
+          'learn-more': 'Learn more',
+          'why-circuit-ai': 'Why Circuit AI?',
+          'intelligent-processing': 'Intelligent processing',
+          'intelligent-processing-desc': 'Our advanced artificial intelligence understands your Persian descriptions and converts complex circuits into executable code.',
+          'circuit-visualization': 'Circuit visualization',
+          'circuit-visualization-desc': 'Automatically generate accurate and professional images of your circuits using advanced Python graphics libraries.',
+          'spice-simulation': 'SPICE simulation',
+          'spice-simulation-desc': 'Generate standard SPICE netlist code for accurate circuit performance simulation in engineering software.',
+          'complete-python-code': 'Complete Python code',
+          'complete-python-code-desc': 'Get ready-to-run Python code with all the functions for drawing circuit elements and the connections between them.',
+          'persian-support': 'Persian support',
+          'persian-support-desc': 'Completely Persian user interface with the ability to understand and process circuit descriptions in Persian.',
+          'cloud-storage': 'Cloud storage',
+          'cloud-storage-desc': 'Securely store your chat history and projects in the cloud with access from any device.',
+          'sample-circuits': 'Sample circuits',
+          'electronic-filters': 'Electronic filters',
+          'electronic-filters-desc': 'Low-pass, high-pass, bandpass, and bandstop filters',
+          'amplifiers': 'Amplifiers',
+          'amplifiers-desc': 'Operational amplifiers and transistors',
+          'oscillators': 'Oscillators',
+          'oscillators-desc': 'RC, LC, and crystal oscillator circuits',
+          'digital-circuits': 'Digital circuits',
+          'digital-circuits-desc': 'Logic gates, counters, and sequential circuits',
+          'power-circuits': 'Power circuits',
+          'power-circuits-desc': 'Regulators, inverters and switching circuits',
+          'and-many-more': 'And many more...',
+          'any-circuit': 'Any circuit you can describe!',
+          'ready-to-start': 'Are you ready to start?',
+          'cta-subtitle': 'Create your account now and design your first circuit. We provide you with all the tools you need for free.',
+          'start-circuit-design': 'Starting circuit design',
+          'copyright': '© 2024 Circuit AI. All rights reserved.',
+          'about-us': 'About us',
+          'contact-us': 'Contact us',
+          'privacy': 'Privacy',
+          'nav-reviews': 'Reviews',
+          'user-reviews': 'User Reviews',
+          'recent-reviews': 'Recent Reviews',
+          'recent-reviews-desc': 'Latest user feedback for Circuit AI',
+          'user-badge-registered': 'Registered User',
+          'user-badge-guest': 'Guest',
+          'circuit-image-label': 'Circuit Image',
+          'stats-overview': 'Overview',
+          'stats-overview-desc': 'Approved reviews and user satisfaction statistics',
+          'loading-reviews': 'Loading reviews...',
+          'loading-stats': 'Loading stats...',
+          'average-rating': 'Average Rating',
+          'total-reviews': 'Total Reviews',
+          'no-reviews-yet': 'No reviews available yet',
+          'loading-error': 'Error loading reviews',
+          'loading-image': 'Loading image...',
+          'image-load-error': 'Load error',
+          'no-image': 'No image'
+        },
+        fa: {
+          'nav-features': 'ویژگی‌ها',
+          'nav-examples': 'نمونه‌ها',
+          'nav-login': 'ورود',
+          'nav-start': 'شروع کنید',
+          'hero-title': 'مدار خود را با هوش مصنوعی طراحی کنید',
+          'hero-subtitle': 'توضیح مدار الکتریکی خود را به زبان فارسی بنویسید و هوش مصنوعی پیشرفته ما کد کامل پایتون، شبیه‌سازی SPICE و تصویر مدار را برای شما تولید کند.',
+          'start-now': 'همین حالا شروع کنید',
+          'learn-more': 'بیشتر بدانید',
+          'why-circuit-ai': 'چرا Circuit AI؟',
+          'intelligent-processing': 'پردازش هوشمند',
+          'intelligent-processing-desc': 'هوش مصنوعی پیشرفته ما توضیحات فارسی شما را درک کرده و مدارهای پیچیده را به کد قابل اجرا تبدیل می‌کند.',
+          'circuit-visualization': 'تصویرسازی مدار',
+          'circuit-visualization-desc': 'تولید خودکار تصاویر دقیق و حرفه‌ای از مدارهای شما با استفاده از کتابخانه‌های گرافیکی پیشرفته پایتون.',
+          'spice-simulation': 'شبیه‌سازی SPICE',
+          'spice-simulation-desc': 'تولید کد netlist استاندارد SPICE برای شبیه‌سازی دقیق عملکرد مدار در نرم‌افزارهای مهندسی.',
+          'complete-python-code': 'کد کامل پایتون',
+          'complete-python-code-desc': 'دریافت کد پایتون آماده اجرا با تمام توابع رسم المان‌های مدار و اتصالات بین آن‌ها.',
+          'persian-support': 'پشتیبانی فارسی',
+          'persian-support-desc': 'رابط کاربری کاملاً فارسی با قابلیت درک و پردازش توضیحات مدار به زبان پارسی.',
+          'cloud-storage': 'ذخیره‌سازی ابری',
+          'cloud-storage-desc': 'ذخیره امن تاریخچه چت‌ها و پروژه‌های شما در فضای ابری با قابلیت دسترسی از هر دستگاهی.',
+          'sample-circuits': 'نمونه مدارها',
+          'electronic-filters': 'فیلترهای الکترونیکی',
+          'electronic-filters-desc': 'فیلترهای پایین‌گذر، بالا‌گذر، باندگذر و باندstop',
+          'amplifiers': 'تقویت‌کننده‌ها',
+          'amplifiers-desc': 'تقویت‌کننده‌های عملیاتی و ترانزیستوری',
+          'oscillators': 'نوسان‌سازها',
+          'oscillators-desc': 'مدارهای نوسان‌ساز RC، LC و کریستالی',
+          'digital-circuits': 'مدارهای دیجیتال',
+          'digital-circuits-desc': 'گیت‌های منطقی، شمارنده‌ها و مدارات ترتیبی',
+          'power-circuits': 'مدارهای قدرت',
+          'power-circuits-desc': 'رگولاتورها، اینورترها و مدارهای سوئیچینگ',
+          'and-many-more': 'و بسیاری دیگر...',
+          'any-circuit': 'هر مداری که بتوانید توصیف کنید!',
+          'ready-to-start': 'آماده شروع هستید؟',
+          'cta-subtitle': 'همین حالا حساب کاربری خود را ایجاد کنید و اولین مدار خود را طراحی کنید. تمام ابزارهای مورد نیاز را به صورت رایگان در اختیارتان قرار می‌دهیم.',
+          'start-circuit-design': 'شروع طراحی مدار',
+          'copyright': '© 2024 Circuit AI. تمام حقوق محفوظ است.',
+          'about-us': 'درباره ما',
+          'contact-us': 'تماس با ما',
+          'privacy': 'حریم خصوصی',
+          'nav-reviews': 'نظرات',
+          'user-reviews': 'نظرات کاربران',
+          'recent-reviews': 'نظرات اخیر',
+          'recent-reviews-desc': 'تازه‌ترین بازخوردهای کاربران از Circuit AI',
+          'user-badge-registered': 'کاربر ثبت‌شده',
+          'user-badge-guest': 'مهمان',
+          'circuit-image-label': 'تصویر مدار',
+          'stats-overview': 'آمار کلی',
+          'stats-overview-desc': 'نظرات تأیید شده و آمار رضایت کاربران',
+          'loading-reviews': 'بارگذاری نظرات...',
+          'loading-stats': 'بارگذاری آمار...',
+          'average-rating': 'میانگین امتیاز',
+          'total-reviews': 'کل نظرات',
+          'no-reviews-yet': 'هنوز نظری موجود نیست',
+          'loading-error': 'خطا در بارگذاری نظرات',
+          'loading-image': 'بارگذاری تصویر...',
+          'image-load-error': 'خطا در بارگذاری',
+          'no-image': 'بدون تصویر'
+        }
+      };
+
+      // Current language (default: English)
+      let currentLang = 'en';
+
+      // Language switch function
+      function switchLanguage(lang) {
+        currentLang = lang;
+
+        // Update all elements with data-lang-key
+        document.querySelectorAll('[data-lang-key]').forEach(element => {
+          const key = element.getAttribute('data-lang-key');
+          if (translations[lang][key]) {
+            element.textContent = translations[lang][key];
+          }
+        });
+
+        // Update language toggle
+        const langToggle = document.querySelector('.lang-toggle');
+        if (langToggle) {
+          langToggle.setAttribute('data-lang', lang);
+        }
+
+        // Update document direction and language
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+
+        // Save language preference
+        localStorage.setItem('circuit-ai-lang', lang);
+      }
+
+      // Initialize language on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        // Load saved language preference or default to English
+        const savedLang = localStorage.getItem('circuit-ai-lang') || 'en';
+        switchLanguage(savedLang);
+
+        // Add click handler to language toggle
+        const langToggle = document.querySelector('.lang-toggle');
+        if (langToggle) {
+          langToggle.addEventListener('click', function() {
+            const currentLang = this.getAttribute('data-lang');
+            const newLang = currentLang === 'en' ? 'fa' : 'en';
+            this.setAttribute('data-lang', newLang);
+            switchLanguage(newLang);
+          });
+        }
+      });
+
       // Smooth scrolling for anchor links
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -773,6 +2013,297 @@
           }
         });
       });
+
+      // بارگذاری آمار نظرات در لندینگ پیج
+      async function loadLandingReviewsStats() {
+        try {
+          const response = await fetch('/api/reviews/stats/');
+          const data = await response.json();
+
+          // ایجاد progress barهای امتیازات
+          const ratingBarsHtml = [5, 4, 3, 2, 1].map(rating => {
+            const percentage = data.rating_percentages[rating] || 0;
+            const count = data.rating_counts[rating] || 0;
+            const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+
+            return `
+              <div class="rating-progress-item">
+                <div class="rating-stars">${stars}</div>
+                <div class="rating-bar-container">
+                  <div class="rating-bar" style="width: ${percentage}%"></div>
+                </div>
+                <div class="rating-percentage">${percentage}%</div>
+                <div class="rating-count">(${count})</div>
+              </div>
+            `;
+          }).join('');
+
+          document.getElementById('landingReviewsStats').innerHTML = `
+            <div class="reviews-ratings-breakdown">
+              <div class="rating-stats-header">
+                <div class="rating-stat-main">
+                  <div class="stat-number">${data.average_rating}</div>
+                  <div class="stat-label">${translations[currentLang]['average-rating']}</div>
+                </div>
+                <div class="rating-stat-secondary">
+              <div class="stat-number">${data.total_reviews}</div>
+                  <div class="stat-label">${translations[currentLang]['total-reviews']}</div>
+            </div>
+            </div>
+              <div class="rating-progress-bars">
+                ${ratingBarsHtml}
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          console.error('خطا در بارگذاری آمار:', error);
+          document.getElementById('landingReviewsStats').innerHTML = `
+            <div class="stat-card">
+              <div class="stat-number">-</div>
+              <div class="stat-label">${currentLang === 'fa' ? 'خطا' : 'Error'}</div>
+            </div>
+          `;
+        }
+      }
+
+      // بارگذاری نظرات ویژه در لندینگ پیج
+      async function loadFeaturedReviews() {
+        const reviewsGrid = document.getElementById('featuredReviewsGrid');
+
+        try {
+          console.log('بارگذاری نظرات ویژه...');
+          const response = await fetch('/api/reviews/featured/');
+          const data = await response.json();
+
+          console.log('داده‌های نظرات ویژه:', data);
+
+          if (data.reviews && data.reviews.length > 0) {
+            reviewsGrid.innerHTML = '';
+
+            data.reviews.forEach((review, index) => {
+              const reviewCard = document.createElement('div');
+              reviewCard.className = 'featured-review-card';
+
+              const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+              const userType = review.user_type === translations[currentLang]['user-badge-registered'] ? 'user' : 'guest';
+              const userBadgeText = review.user_type === translations['fa']['user-badge-registered'] ? translations[currentLang]['user-badge-registered'] : translations[currentLang]['user-badge-guest'];
+              const circuitImageLabel = translations[currentLang]['circuit-image-label'];
+
+              reviewCard.innerHTML = `
+                <div class="featured-review-header">
+                  <div class="featured-review-avatar">
+                    ${review.author_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div class="featured-review-info">
+                    <h4>${review.author_name}</h4>
+                    <div class="featured-review-meta">
+                      <span>${review.created_at}</span>
+                      <div class="featured-review-badge ${userType}">${userBadgeText}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="featured-review-rating">
+                  ${stars}
+                </div>
+
+                ${review.comment ? `<p class="featured-review-comment">${review.comment}</p>` : ''}
+
+                ${review.has_image ? `
+                  <div class="featured-review-image">
+                    <div class="image-loading">
+                      <div class="loading-spinner" style="width: 20px; height: 20px;"></div>
+                      <p>${translations[currentLang]['loading-image']}</p>
+                    </div>
+                    <div class="review-image-content" style="display: none;">
+                      <img class="rendered-image" alt="${circuitImageLabel}" style="display: none;">
+                      <div class="featured-review-image-label">🖼️ ${circuitImageLabel}</div>
+                    </div>
+                  </div>
+                ` : ''}
+              `;
+
+              reviewsGrid.appendChild(reviewCard);
+
+              // اگر تصویر دارد، بارگذاری کن
+              if (review.has_image && review.chat_history_message_id) {
+                loadFeaturedReviewImage(reviewCard, review.chat_history_message_id);
+              }
+            });
+          } else {
+            reviewsGrid.innerHTML = `
+                  <div class="no-featured-reviews" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <div style="color: var(--white-40); margin-bottom: 1rem; display: inline-flex;">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </div>
+                <h3 style="color: var(--white-60); margin-bottom: 0.5rem; font-size: 1.2rem;" data-lang-key="no-reviews-yet">هنوز نظری موجود نیست</h3>
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error('خطا در بارگذاری نظرات:', error);
+          reviewsGrid.innerHTML = `
+            <div class="error-featured" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+              <p style="color: var(--white-60); font-size: 1rem;" data-lang-key="loading-error">خطا در بارگذاری نظرات</p>
+            </div>
+          `;
+        }
+      }
+
+      // اضافه کردن کد پایتون به نظر ویژه
+      function addPythonCodeToReview(reviewCard, pythonCode, reviewId) {
+        // بررسی اینکه آیا کد قبلاً اضافه شده یا نه
+        if (reviewCard.querySelector('.review-code')) {
+          return;
+        }
+
+        const imageContainer = reviewCard.querySelector('.featured-review-image');
+
+        // ایجاد بخش کد
+        const codeSection = document.createElement('div');
+        codeSection.className = 'review-code';
+        codeSection.style.cssText = `
+          margin-top: 1.5rem;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid var(--stroke);
+          border-radius: 12px;
+          overflow: hidden;
+        `;
+
+        codeSection.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid var(--stroke);">
+            <span style="color: var(--white-80); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+              🐍 کد پایتون تولید شده
+            </span>
+            <button onclick="copyCode(this)" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--stroke); border-radius: 6px; color: var(--white-80); padding: 0.25rem 0.5rem; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; transition: all 0.2s ease;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              کپی
+            </button>
+          </div>
+          <div style="margin: 0; padding: 1rem; background: rgba(0, 0, 0, 0.6); overflow-x: auto;">
+            <code style="font-family: 'Fira Code', 'Monaco', 'Consolas', monospace; font-size: 13px; line-height: 1.6; color: var(--white-90); white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(pythonCode)}</code>
+          </div>
+        `;
+
+        // اضافه کردن کد بعد از تصویر
+        if (imageContainer) {
+          imageContainer.insertAdjacentElement('afterend', codeSection);
+        }
+      }
+
+      // تابع کمکی برای escape HTML
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // تابع کپی کد
+      function copyCode(button) {
+        const codeElement = button.closest('.review-code').querySelector('code');
+        const codeText = codeElement.textContent;
+
+        navigator.clipboard.writeText(codeText).then(() => {
+          const originalText = button.innerHTML;
+          button.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> کپی شد!';
+          button.style.background = 'rgba(68, 255, 68, 0.1)';
+          button.style.borderColor = 'rgba(68, 255, 68, 0.3)';
+          button.style.color = '#44ff44';
+
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = '';
+            button.style.borderColor = '';
+            button.style.color = '';
+          }, 2000);
+        }).catch(err => {
+          console.error('خطا در کپی کردن:', err);
+        });
+      }
+
+      // بارگذاری تصویر برای نظر ویژه - رندر کردن کد پایتون
+      async function loadFeaturedReviewImage(reviewCard, messageId) {
+        const imageLoading = reviewCard.querySelector('.image-loading');
+        const imageContent = reviewCard.querySelector('.review-image-content');
+        const img = reviewCard.querySelector('.rendered-image');
+
+        try {
+          console.log('بارگذاری تصویر نظر:', messageId);
+          const response = await fetch(`/api/chat/history/message/${messageId}`);
+
+          if (!response.ok) {
+            console.error('خطا در بارگذاری تصویر:', messageId);
+            imageLoading.innerHTML = `<p style="color: var(--white-60); font-size: 11px;">${translations[currentLang]['image-load-error']}</p>`;
+            return;
+          }
+
+          const messageData = await response.json();
+
+          if (messageData.image_base64) {
+            console.log('تصویر از قبل رندر شده، استفاده از تصویر کش شده');
+            img.src = messageData.image_base64;
+            imageLoading.style.display = 'none';
+            imageContent.style.display = 'block';
+            img.style.display = 'block';
+
+            // نمایش کد پایتون اگر موجود باشد
+            if (messageData.python_code) {
+              addPythonCodeToReview(reviewCard, messageData.python_code, review.id);
+            }
+          } else if (messageData.python_code) {
+            console.log('کد پایتون یافت شد، رندر کردن...');
+
+            // رندر کردن کد پایتون مانند reviews.html
+            const renderResponse = await fetch('/api/render-python-code/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+              },
+              body: JSON.stringify({ python_code: messageData.python_code })
+            });
+
+            if (renderResponse.ok) {
+              const renderData = await renderResponse.json();
+              if (renderData.image_base64) {
+                console.log('تصویر با موفقیت رندر شد');
+                img.src = renderData.image_base64;
+                imageLoading.style.display = 'none';
+                imageContent.style.display = 'block';
+                img.style.display = 'block';
+
+                // نمایش کد پایتون
+                addPythonCodeToReview(reviewCard, messageData.python_code, review.id);
+                    } else {
+                      console.log('کد پایتون قابل رندر نیست، نمایش کد');
+                      imageLoading.innerHTML = `<p style="color: var(--white-60); font-size: 11px;">${translations[currentLang]['no-image']}</p>`;
+                      // نمایش کد پایتون حتی اگر تصویر رندر نشد
+                      addPythonCodeToReview(reviewCard, messageData.python_code, review.id);
+                    }
+            } else {
+              console.error('خطا در رندر کردن کد');
+              imageLoading.innerHTML = `<p style="color: var(--white-60); font-size: 11px;">${translations[currentLang]['image-load-error']}</p>`;
+            }
+          } else {
+            console.log('کد پایتون یا تصویر یافت نشد');
+            imageLoading.innerHTML = `<p style="color: var(--white-60); font-size: 11px;">${translations[currentLang]['no-image']}</p>`;
+          }
+        } catch (error) {
+          console.error('خطا در بارگذاری تصویر:', error);
+          imageLoading.innerHTML = '<p style="color: var(--white-60); font-size: 11px;">خطا</p>';
+        }
+      }
+
+      // بارگذاری آمار نظرات در لندینگ پیج
+      loadLandingReviewsStats();
+
+      // بارگذاری نظرات ویژه
+      loadFeaturedReviews();
 
       // Add intersection observer for animations
       const observerOptions = {

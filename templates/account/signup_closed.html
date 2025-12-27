@@ -1,0 +1,20 @@
+{% extends "account/base.html" %}
+
+{% block head_title %}ثبت نام بسته است{% endblock %}
+
+{% block content %}
+<div style="text-align: center;">
+  <h3 style="color: var(--white-80); margin-bottom: 20px;">ثبت نام بسته است</h3>
+
+  <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--stroke); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+    <p style="color: var(--white-70); margin-bottom: 15px;">متأسفانه امکان ثبت نام جدید وجود ندارد.</p>
+    <p style="color: var(--white-60); font-size: 14px;">اگر حساب کاربری دارید، می‌توانید وارد شوید.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 15px;">
+    <a href="{% url 'account_login' %}" class="login-button">ورود به سیستم</a>
+
+    <a href="{% url 'index' %}" class="login-button" style="background: var(--white-20);">بازگشت به صفحه اصلی</a>
+  </div>
+</div>
+{% endblock %}

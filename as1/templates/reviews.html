@@ -1,0 +1,1456 @@
+{% load socialaccount %}
+{% load account %}
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>نظرات کاربران | AI Circuit Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+      html, body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+
+        -webkit-overflow-scrolling: touch; /* اسکرول روان در iOS */
+      }
+
+      /* تنظیمات اسکرول برای وب‌کیت (Safari, Chrome, Edge) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1); /* Darker track */
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.4); /* Darker thumb */
+        border-radius: 4px;
+        transition: background 0.3s ease;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.6); /* Slightly lighter on hover */
+      }
+
+      /* تنظیمات اسکرول برای Firefox */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.1); /* Darker colors */
+      }
+
+      .reviews-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-black);
+      }
+
+      .reviews-header {
+        padding: 2rem 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        backdrop-filter: blur(20px);
+        background: rgba(0, 0, 0, 0.8);
+        border-bottom: 1px solid var(--stroke);
+      }
+
+      .reviews-logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .reviews-logo-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--stroke);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+      }
+
+      .reviews-logo-icon svg {
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
+      }
+
+      .reviews-logo h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--white);
+        margin: 0;
+      }
+
+      .reviews-nav {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .btn-reviews {
+        background: transparent;
+        backdrop-filter: blur(10px);
+        border: none;
+        border-radius: 10px;
+        color: var(--white-80);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        padding: 1px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      .btn-reviews:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--white);
+        transform: translateY(-1px);
+      }
+
+      .reviews-main {
+        flex: 1;
+        padding: 8rem 2rem 4rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .reviews-hero {
+        text-align: center;
+        margin-bottom: 4rem;
+      }
+
+      .reviews-title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        letter-spacing: -1px;
+      }
+
+      .reviews-subtitle {
+        font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+        color: var(--white-70);
+        margin-bottom: 3rem;
+        line-height: 1.6;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .review-form-section {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 3rem;
+        margin-bottom: 3rem;
+        text-align: center;
+      }
+
+      .rating-stars {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        direction: ltr;
+      }
+
+      .star-input {
+        display: none;
+      }
+
+      .star-label {
+        font-size: 3rem;
+        color: var(--white-40);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+      }
+
+      .star-label:hover,
+      .star-input:checked ~ .star-label {
+        color: var(--white-40);
+        transform: none;
+        filter: none;
+      }
+
+      .star-input:checked + .star-label,
+      .star-input:checked + .star-label ~ .star-label {
+        color: #ffd700;
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+      }
+
+      .form-group {
+        margin-bottom: 2rem;
+        text-align: right;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 16px;
+        color: var(--white-80);
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+
+      .comment-textarea {
+        width: 100%;
+        min-height: 120px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        color: var(--white);
+        font-size: 15px;
+        font-family: inherit;
+        padding: 16px;
+        resize: vertical;
+        transition: all 0.3s ease;
+        direction: rtl;
+      }
+
+      .comment-textarea:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--white-50);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+      }
+
+      .comment-textarea::placeholder {
+        color: var(--white-40);
+      }
+
+      .submit-btn {
+        background: var(--white-10);
+        border: 1px solid var(--white-30);
+        color: var(--white);
+        padding: 16px 32px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .submit-btn:hover:not(:disabled) {
+        background: var(--white-20);
+        border-color: var(--white-50);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .reviews-footer {
+        padding: 2rem;
+        text-align: center;
+        background: rgba(10, 10, 10, 0.8);
+        border-top: 1px solid var(--stroke);
+        margin-top: 4rem;
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .footer-text {
+        color: var(--white-60);
+        font-size: 0.9rem;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .footer-link {
+        color: var(--white-60);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+      }
+
+      .footer-link:hover {
+        color: var(--white);
+      }
+
+      .success-message,
+      .error-message {
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        font-weight: 500;
+      }
+
+      .success-message {
+        background: rgba(68, 255, 68, 0.1);
+        border: 1px solid rgba(68, 255, 68, 0.3);
+        color: #44ff44;
+      }
+
+      .error-message {
+        background: rgba(255, 68, 68, 0.1);
+        border: 1px solid rgba(255, 68, 68, 0.3);
+        color: #ff4444;
+      }
+
+      .view-reviews-btn {
+        background: transparent;
+        border: 1px solid var(--stroke);
+        color: var(--white-80);
+        padding: 16px 32px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+      }
+
+      .view-reviews-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--stroke-hover);
+        color: var(--white);
+        transform: translateY(-1px);
+      }
+
+      .guest-fields,
+      .user-fields {
+        margin-bottom: 2rem;
+      }
+
+      .guest-fields .form-group,
+      .user-fields .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .guest-fields .input-glass,
+      .user-fields .input-glass {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--stroke);
+        border-radius: 10px;
+        color: var(--white);
+        font-size: 14px;
+        transition: all 0.3s ease;
+        font-family: inherit;
+      }
+
+      .guest-fields .input-glass:focus,
+      .user-fields .input-glass:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--white-50);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+      }
+
+      .guest-fields .input-glass::placeholder,
+      .user-fields .input-glass::placeholder {
+        color: var(--white-40);
+      }
+
+      .circuit-gallery {
+        margin-top: 1rem;
+      }
+
+      .gallery-loading {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+      }
+
+      .gallery-loading p {
+        color: var(--white-60);
+        margin-top: 1rem;
+        font-size: 14px;
+      }
+
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .gallery-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .gallery-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--stroke-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .gallery-item.selected {
+        border-color: #44ff44;
+        background: rgba(68, 255, 68, 0.1);
+        box-shadow: 0 0 20px rgba(68, 255, 68, 0.3);
+      }
+
+      .gallery-item.selected::after {
+        content: "✓";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #44ff44;
+        color: black;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        z-index: 2;
+      }
+
+      .gallery-image-container {
+        position: relative;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      .gallery-image {
+        width: 100%;
+        height: 150px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid var(--stroke);
+        background: white;
+      }
+
+      .gallery-info {
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .gallery-session {
+        font-size: 12px;
+        color: var(--white-60);
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+      }
+
+      .gallery-date {
+        font-size: 11px;
+        color: var(--white-50);
+      }
+
+      .no-circuits {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+      }
+
+      .no-circuits-icon {
+        color: var(--white-40);
+        margin-bottom: 1rem;
+        display: inline-flex;
+      }
+
+      .no-circuits p {
+        color: var(--white-60);
+        margin-bottom: 1.5rem;
+      }
+
+      .selection-preview {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: rgba(68, 255, 68, 0.1);
+        border: 1px solid rgba(68, 255, 68, 0.3);
+        border-radius: 12px;
+      }
+
+      .selected-circuit-info {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .selected-circuit-image {
+        flex-shrink: 0;
+      }
+
+      .selected-circuit-image img {
+        width: 100px;
+        height: 75px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid var(--stroke);
+        background: white;
+      }
+
+      .selected-circuit-details h4 {
+        color: var(--white);
+        margin: 0 0 0.5rem 0;
+        font-size: 16px;
+      }
+
+      .selected-circuit-details p {
+        color: var(--white-70);
+        margin: 0.25rem 0;
+        font-size: 14px;
+      }
+
+      .selected-circuit-details p span {
+        color: var(--white-90);
+        font-weight: 500;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--stroke);
+        color: var(--white-80);
+        padding: 0.5rem 1rem;
+        font-size: 13px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 0.5rem;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--white-40);
+        color: var(--white);
+      }
+
+      .btn-primary {
+        background: var(--white-10);
+        border: 1px solid var(--white-30);
+        color: var(--white);
+        padding: 0.75rem 1.5rem;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        background: var(--white-20);
+        border-color: var(--white-50);
+        transform: translateY(-1px);
+      }
+
+      .code-display code {
+        background: transparent !important;
+        color: inherit !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        font-family: inherit !important;
+      }
+
+      /* Syntax highlighting styles */
+      .code-display .token.comment,
+      .code-display .token.prolog,
+      .code-display .token.doctype,
+      .code-display .token.cdata {
+        color: #6a9955;
+      }
+
+      .code-display .token.punctuation {
+        color: #d4d4d4;
+      }
+
+      .code-display .token.property,
+      .code-display .token.tag,
+      .code-display .token.constant,
+      .code-display .token.symbol,
+      .code-display .token.deleted {
+        color: #569cd6;
+      }
+
+      .code-display .token.boolean,
+      .code-display .token.number {
+        color: #b5cea8;
+      }
+
+      .code-display .token.selector,
+      .code-display .token.attr-name,
+      .code-display .token.string,
+      .code-display .token.char,
+      .code-display .token.builtin,
+      .code-display .token.inserted {
+        color: #ce9178;
+      }
+
+      .code-display .token.operator,
+      .code-display .token.entity,
+      .code-display .token.url,
+      .code-display .language-css .token.string,
+      .code-display .style .token.string,
+      .code-display .token.variable {
+        color: #d4d4d4;
+      }
+
+      .code-display .token.atrule,
+      .code-display .token.attr-value,
+      .code-display .token.function,
+      .code-display .token.class-name {
+        color: #dcdcaa;
+      }
+
+      .code-display .token.keyword {
+        color: #569cd6;
+      }
+
+      .code-display .token.regex,
+      .code-display .token.important {
+        color: #d16969;
+      }
+
+      .signup-prompt {
+        margin-top: 3rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .signup-prompt-icon {
+        color: var(--white-60);
+        margin-bottom: 1.5rem;
+        display: inline-flex;
+      }
+
+      .signup-prompt h3 {
+        color: var(--white);
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      .signup-prompt p {
+        color: var(--white-70);
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+      }
+
+      .signup-benefits {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0;
+        text-align: right;
+      }
+
+      .signup-benefits li {
+        color: var(--white-80);
+        margin-bottom: 0.75rem;
+        padding-right: 1rem;
+        position: relative;
+        font-size: 0.95rem;
+      }
+
+      .signup-benefits li::before {
+        content: "✓";
+        position: absolute;
+        right: -1rem;
+        color: #44ff44;
+        font-weight: bold;
+      }
+
+      .signup-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+
+      .signup-btn {
+        padding: 14px 28px;
+        font-size: 16px;
+        font-weight: 600;
+        min-width: 200px;
+      }
+
+      .signup-note {
+        color: var(--white-60);
+        font-size: 14px;
+        font-style: italic;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .reviews-header {
+          padding: 1.5rem 1rem;
+        }
+
+        .reviews-main {
+          padding: 6rem 1rem 2rem;
+        }
+
+        .review-form-section {
+          padding: 2rem 1.5rem;
+        }
+
+        .gallery-grid {
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 0.75rem;
+        }
+
+        .gallery-image {
+          height: 120px;
+        }
+
+        .selected-circuit-info {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .selected-circuit-image img {
+          width: 150px;
+          height: 100px;
+        }
+
+        .footer-content {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .footer-links {
+          justify-content: center;
+        }
+      }
+
+      /* Language-specific styles */
+      html[lang="fa"] .reviews-container {
+        direction: rtl;
+      }
+
+      html[lang="en"] .reviews-container {
+        direction: ltr;
+      }
+
+      /* تنظیمات مخصوص موبایل کوچک */
+      @media (max-width: 480px) {
+        .rating-stars {
+          gap: 0.25rem;
+        }
+
+        .star-label {
+          font-size: 2.5rem;
+        }
+
+        .reviews-title {
+          font-size: 2rem;
+        }
+
+        .submit-btn,
+        .view-reviews-btn {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reviews-container">
+      <!-- Header -->
+      <header class="reviews-header">
+        <div class="reviews-logo">
+          <div class="reviews-logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.1 -0.1 20.2 10.2" width="40" height="20">
+              <defs>
+                <linearGradient id="navbarCircuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0" />
+                  <stop offset="50%" style="stop-color:#ffffff;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+                </linearGradient>
+              </defs>
+              <!-- Background static circuit -->
+              <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                    stroke="rgba(255, 255, 255, 0.4)"
+                    stroke-width="0.15"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round" />
+              <!-- Animated flowing circuit -->
+              <path d="M0 5 4 5Q5 5 5 4L5 1Q5 0 6 0L9 0Q10 0 10 1L10 9Q10 10 11 10L14 10Q15 10 15 9L15 6Q15 5 16 5L20 5"
+                    stroke="url(#navbarCircuitGradient)"
+                    stroke-width="0.3"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-dasharray="1,2"
+                    pathLength="100">
+                <animate attributeName="stroke-dashoffset"
+                         values="0;-20"
+                         dur="1.5s"
+                         repeatCount="indefinite" />
+                <animate attributeName="stroke-width"
+                         values="0.3;0.4;0.3"
+                         dur="2s"
+                         repeatCount="indefinite" />
+              </path>
+            </svg>
+          </div>
+          <h1>ᴄɪʀᴄᴜɪᴛ ᴀɪ</h1>
+        </div>
+        <nav class="reviews-nav">
+          <a href="{% url 'landing' %}" class="btn-reviews">خانه</a>
+          <a href="{% url 'index' %}" class="btn-reviews">چت</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="btn-reviews">خروج</a>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn-reviews">ورود</a>
+          {% endif %}
+        </nav>
+      </header>
+
+      <!-- Main Content -->
+      <main class="reviews-main">
+        <div class="reviews-hero">
+          <h1 class="reviews-title">نظرات و پیشنهادات شما</h1>
+          <p class="reviews-subtitle">
+            نظرات و تجربیات شما در بهبود Circuit AI بسیار ارزشمند است.
+            لطفاً امتیاز خود را ثبت کرده و پیشنهاداتتان را با ما در میان بگذارید.
+          </p>
+        </div>
+
+        <div class="review-form-section">
+          <form id="reviewForm" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="rating-stars">
+              <input type="radio" id="star1" name="rating" value="1" class="star-input">
+              <label for="star1" class="star-label">★</label>
+              <input type="radio" id="star2" name="rating" value="2" class="star-input">
+              <label for="star2" class="star-label">★</label>
+              <input type="radio" id="star3" name="rating" value="3" class="star-input">
+              <label for="star3" class="star-label">★</label>
+              <input type="radio" id="star4" name="rating" value="4" class="star-input">
+              <label for="star4" class="star-label">★</label>
+              <input type="radio" id="star5" name="rating" value="5" class="star-input">
+              <label for="star5" class="star-label">★</label>
+            </div>
+
+            <!-- فیلدهای مهمان (برای کاربران بدون حساب) -->
+            <div id="guestFields" class="guest-fields" style="display: none;">
+              <div class="form-group">
+                <label for="guest_name">نام شما *</label>
+                <input
+                  type="text"
+                  id="guest_name"
+                  name="guest_name"
+                  class="input-glass"
+                  placeholder="نام خود را وارد کنید"
+                  maxlength="100"
+                  required>
+              </div>
+
+              <div class="form-group">
+                <label for="guest_email">ایمیل شما (اختیاری)</label>
+                <input
+                  type="email"
+                  id="guest_email"
+                  name="guest_email"
+                  class="input-glass"
+                  placeholder="email@example.com">
+              </div>
+            </div>
+
+            <!-- فیلد انتخاب چت هیستوری (فقط برای کاربران لاگین کرده) -->
+            <div id="userFields" class="user-fields" style="display: none;">
+              <div class="form-group">
+                <label>انتخاب مدار از چت هیستوری (اختیاری)</label>
+                <small class="input-hint">روی تصویر مداری که می‌خواهید نظر دهید کلیک کنید</small>
+
+                <div id="circuitGallery" class="circuit-gallery">
+                  <div id="galleryLoading" class="gallery-loading">
+                    <div class="loading-spinner"></div>
+                    <p>در حال بارگذاری مدارهای شما...</p>
+                  </div>
+
+                  <div id="galleryContent" style="display: none;">
+                    <div id="galleryGrid" class="gallery-grid">
+                    <!-- تصاویر مدارها اینجا نمایش داده می‌شوند -->
+                    </div>
+                  </div>
+
+                  <div id="noCircuits" class="no-circuits" style="display: none;">
+                    <div class="no-circuits-icon">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h18z"></path>
+                        <path d="M3 12v7c0 .552.448 1 1 1h16c.552 0 1-.448 1-1v-7"></path>
+                      </svg>
+                    </div>
+                    <p>هنوز هیچ مداری تولید نکرده‌اید</p>
+                    <a href="{% url 'index' %}" class="btn-primary">رفتن به چت</a>
+                  </div>
+                </div>
+
+                <!-- فیلد hidden برای ذخیره انتخاب -->
+                <input type="hidden" id="chat_history_message" name="chat_history_message" value="">
+
+                <!-- پیش‌نمایش انتخاب -->
+                <div id="selectionPreview" class="selection-preview" style="display: none;">
+                  <div class="selected-circuit-info">
+                    <div class="selected-circuit-image">
+                      <img id="selectedCircuitImage" src="" alt="مدار انتخاب شده">
+                    </div>
+                    <div class="selected-circuit-details">
+                      <h4>مدار انتخاب شده</h4>
+                      <p id="selectedCircuitSession">از چت: <span></span></p>
+                      <p id="selectedCircuitDate">تاریخ: <span></span></p>
+                      <button type="button" id="changeSelection" class="btn-secondary">تغییر انتخاب</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="comment">نظر شما (اختیاری)</label>
+              <textarea
+                id="comment"
+                name="comment"
+                class="comment-textarea"
+                placeholder="اگر نظری دارید، لطفاً اینجا بنویسید..."
+                maxlength="500"></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+              <span>ثبت نظر</span>
+            </button>
+          </form>
+
+          <div id="messageContainer"></div>
+        </div>
+
+        <!-- بخش تشویقی برای مهمانان -->
+        <div id="signupPrompt" class="signup-prompt" style="display: none;">
+          <div class="signup-prompt-content">
+            <div class="signup-prompt-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 2l-1 1"></path>
+                <path d="M22 8l-1-1"></path>
+                <path d="M16 2l1 1"></path>
+                <path d="M16 8l1-1"></path>
+              </svg>
+            </div>
+            <h3>برای امکانات بیشتر ثبت نام کنید!</h3>
+            <p>با ثبت نام در Circuit AI می‌توانید:</p>
+            <ul class="signup-benefits">
+              <li>⭐ کدهای پایتون تولید شده خود را در نظرات به اشتراک بگذارید</li>
+              <li>💾 تاریخچه چت‌های خود را ذخیره و مدیریت کنید</li>
+              <li>🎯 از ابزارهای پیشرفته طراحی مدار استفاده کنید</li>
+              <li>🌟 به جامعه Circuit AI بپیوندید</li>
+            </ul>
+            <div class="signup-actions">
+              <a href="{% url 'signup' %}" class="btn-primary signup-btn">
+                <span>همین حالا ثبت نام کنید</span>
+              </a>
+              <span class="signup-note">رایگان و سریع!</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center;">
+          <a href="{% url 'reviews_list' %}" class="view-reviews-btn">
+            <span>مشاهده نظرات کاربران</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </a>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="reviews-footer">
+        <div class="footer-content">
+          <div class="footer-text" data-lang-key="copyright">
+            © 2024 Circuit AI. تمام حقوق محفوظ است.
+          </div>
+          <div class="footer-links">
+            <a href="#" class="footer-link" data-lang-key="about-us">درباره ما</a>
+            <a href="#" class="footer-link" data-lang-key="contact-us">تماس با ما</a>
+            <a href="#" class="footer-link" data-lang-key="privacy">حریم خصوصی</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <style>
+        :root {
+            --bg-black: #000000;
+            --bg-dark: #0a0a0a;
+            --bg-darker: #050505;
+            --white: #ffffff;
+            --white-90: rgba(255, 255, 255, 0.9);
+            --white-80: rgba(255, 255, 255, 0.8);
+            --white-70: rgba(255, 255, 255, 0.7);
+            --white-60: rgba(255, 255, 255, 0.6);
+            --white-50: rgba(255, 255, 255, 0.5);
+            --white-40: rgba(255, 255, 255, 0.4);
+            --white-30: rgba(255, 255, 255, 0.3);
+            --white-20: rgba(255, 255, 255, 0.2);
+            --white-10: rgba(255, 255, 255, 0.1);
+            --white-5: rgba(255, 255, 255, 0.05);
+            --stroke: rgba(255, 255, 255, 0.15);
+            --stroke-hover: rgba(255, 255, 255, 0.3);
+            --glow: rgba(255, 255, 255, 0.1);
+          }
+
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Vazirmatn', 'IRANSans', sans-serif;
+            background: var(--bg-black);
+            color: var(--white);
+            height: auto;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            direction: rtl;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
+          }
+    </style>
+
+    <script>
+      // بررسی وضعیت کاربر و نمایش فیلدهای مناسب
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded'); // Debug log
+        const isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %}; // Debug log
+
+        const guestFields = document.getElementById('guestFields');
+        const userFields = document.getElementById('userFields');
+        const signupPrompt = document.getElementById('signupPrompt');
+
+        if (isAuthenticated) {
+          console.log('User is authenticated, showing user fields');
+          userFields.style.display = 'block';
+          guestFields.style.display = 'none';
+          
+          // غیرفعال کردن فیلدهای guest برای کاربران authenticated
+          const guestNameInput = document.getElementById('guest_name');
+          const guestEmailInput = document.getElementById('guest_email');
+          if (guestNameInput) {
+            guestNameInput.removeAttribute('required');
+            guestNameInput.disabled = true;
+          }
+          if (guestEmailInput) {
+            guestEmailInput.disabled = true;
+          }
+          
+          loadUserChatHistory();
+          setupGalleryEvents();
+        } else {
+          console.log('User is not authenticated, showing guest fields');
+          guestFields.style.display = 'block';
+          userFields.style.display = 'none';
+          signupPrompt.style.display = 'block';
+          
+          // فعال کردن فیلدهای guest برای کاربران غیر authenticated
+          const guestNameInput = document.getElementById('guest_name');
+          if (guestNameInput) {
+            guestNameInput.setAttribute('required', 'required');
+            guestNameInput.disabled = false;
+          }
+        }
+      });
+
+      // تابع کمکی برای گرفتن CSRF token
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      // تنظیم رویدادهای گالری
+      function setupGalleryEvents() {
+        const galleryGrid = document.getElementById('galleryGrid');
+        const selectionPreview = document.getElementById('selectionPreview');
+        const selectedCircuitImage = document.getElementById('selectedCircuitImage');
+        const selectedCircuitSession = document.getElementById('selectedCircuitSession').querySelector('span');
+        const selectedCircuitDate = document.getElementById('selectedCircuitDate').querySelector('span');
+        const chatHistoryMessage = document.getElementById('chat_history_message');
+        const changeSelection = document.getElementById('changeSelection');
+
+        // event listener برای کلیک روی آیتم‌های گالری
+        galleryGrid.addEventListener('click', function(e) {
+          const galleryItem = e.target.closest('.gallery-item');
+          if (!galleryItem) return;
+
+          const messageId = galleryItem.dataset.messageId;
+          const sessionName = galleryItem.dataset.sessionName;
+          const sessionTime = galleryItem.dataset.sessionTime;
+          const imageSrc = galleryItem.querySelector('.gallery-image').src;
+
+          // پاک کردن انتخاب قبلی
+          document.querySelectorAll('.gallery-item').forEach(item => {
+            item.classList.remove('selected');
+          });
+
+          // انتخاب آیتم جدید
+          galleryItem.classList.add('selected');
+
+          // بروزرسانی پیش‌نمایش انتخاب
+          selectedCircuitImage.src = imageSrc;
+          selectedCircuitSession.textContent = sessionName;
+          selectedCircuitDate.textContent = new Date(sessionTime * 1000).toLocaleDateString('fa-IR');
+
+          // ذخیره انتخاب در فیلد hidden
+          chatHistoryMessage.value = messageId;
+
+          // نمایش پیش‌نمایش انتخاب
+          selectionPreview.style.display = 'block';
+
+          // اسکرول به پیش‌نمایش
+          selectionPreview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // event listener برای تغییر انتخاب
+        changeSelection.addEventListener('click', function() {
+          // پاک کردن انتخاب
+          document.querySelectorAll('.gallery-item').forEach(item => {
+            item.classList.remove('selected');
+          });
+
+          // پاک کردن فیلد hidden
+          chatHistoryMessage.value = '';
+
+          // مخفی کردن پیش‌نمایش
+          selectionPreview.style.display = 'none';
+        });
+      }
+
+      // بارگذاری چت هیستوری کاربر به صورت گالری
+      async function loadUserChatHistory() {
+        const galleryLoading = document.getElementById('galleryLoading');
+        const galleryContent = document.getElementById('galleryContent');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const noCircuits = document.getElementById('noCircuits');
+
+        try {
+          console.log('Loading user chat history...');
+          const response = await fetch('{% url "get_user_chat_history" %}');
+          console.log('API Response status:', response.status);
+
+          if (!response.ok) {
+            console.error('API Error:', response.status, response.statusText);
+            galleryLoading.innerHTML = '<p>خطا در بارگذاری داده‌ها</p>';
+            return;
+          }
+
+          const data = await response.json();
+          console.log('API Response data:', data);
+
+          // پاک کردن محتوای قبلی
+          galleryGrid.innerHTML = '';
+
+          if (data.chat_sessions && data.chat_sessions.length > 0) {
+            console.log('Found', data.chat_sessions.length, 'sessions');
+            let totalCircuits = 0;
+
+            for (const session of data.chat_sessions) {
+              console.log('Session:', session.display_name, 'has', session.messages.length, 'messages');
+
+              for (const message of session.messages) {
+                totalCircuits++;
+                console.log('Adding message:', message.message_id, 'with image:', !!message.image_base64);
+
+                // ایجاد آیتم گالری
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.dataset.messageId = message.message_id;
+                galleryItem.dataset.sessionName = message.session_name;
+                galleryItem.dataset.sessionTime = message.session_time;
+
+                // Escape HTML برای جلوگیری از XSS
+                const safeSessionName = message.session_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const formattedDate = new Date(message.session_time * 1000).toLocaleDateString('fa-IR');
+                
+                galleryItem.innerHTML = `
+                  <div class="gallery-image-container">
+                    <img class="gallery-image" src="${message.image_base64}" alt="مدار">
+                  </div>
+                  <div class="gallery-info">
+                    <div class="gallery-session">${safeSessionName}</div>
+                    <div class="gallery-date">${formattedDate}</div>
+                  </div>
+                `;
+
+                galleryGrid.appendChild(galleryItem);
+                console.log('Gallery item added to DOM');
+              }
+            }
+
+            console.log('Total circuits added:', totalCircuits);
+
+            if (totalCircuits > 0) {
+              galleryLoading.style.display = 'none';
+              galleryContent.style.display = 'block';
+              noCircuits.style.display = 'none';
+              console.log('Gallery displayed successfully');
+            } else {
+              galleryLoading.style.display = 'none';
+              galleryContent.style.display = 'none';
+              noCircuits.style.display = 'block';
+              console.log('No circuits found');
+            }
+          } else {
+            console.log('No chat sessions found');
+            galleryLoading.style.display = 'none';
+            galleryContent.style.display = 'none';
+            noCircuits.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('خطا در بارگذاری چت هیستوری:', error);
+          galleryLoading.innerHTML = '<p>خطا در بارگذاری مدارها</p>';
+        }
+      }
+
+
+
+      // اضافه کردن event listener برای فرم - باید بعد از DOMContentLoaded باشد
+      document.addEventListener('DOMContentLoaded', function() {
+        const reviewForm = document.getElementById('reviewForm');
+        
+        if (!reviewForm) {
+          console.error('Form element not found!');
+          return;
+        }
+
+        reviewForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const formData = new FormData(this);
+          const submitBtn = document.getElementById('submitBtn');
+          const messageContainer = document.getElementById('messageContainer');
+
+          console.log('Form data keys:', Array.from(formData.keys()));
+          console.log('Rating:', formData.get('rating'));
+          console.log('Comment:', formData.get('comment'));
+
+          // بررسی اینکه rating انتخاب شده است
+          const rating = formData.get('rating');
+          if (!rating) {
+            if (messageContainer) {
+              messageContainer.innerHTML = `
+                <div class="error-message">
+                  لطفاً امتیاز خود را انتخاب کنید (۱ تا ۵ ستاره)
+                </div>
+              `;
+            }
+            return false;
+          }
+
+          // اگر کاربر لاگین نکرده، چک کردن فیلدهای مهمان
+          const isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+          if (!isAuthenticated) {
+            const guestName = formData.get('guest_name');
+            if (!guestName || guestName.trim() === '') {
+              if (messageContainer) {
+                messageContainer.innerHTML = `
+                  <div class="error-message">
+                    لطفاً نام خود را وارد کنید
+                  </div>
+                `;
+              }
+              return false;
+            }
+          }
+
+          // پاک کردن پیام‌های قبلی
+          if (messageContainer) {
+            messageContainer.innerHTML = '';
+          }
+
+          // غیرفعال کردن دکمه
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>در حال ثبت...</span>';
+          }
+
+          try {
+            const submitUrl = '{% url "submit_review" %}';
+            console.log('Sending request to:', submitUrl);
+
+            // گرفتن CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || formData.get('csrfmiddlewaretoken');
+            console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found');
+
+            const response = await fetch(submitUrl, {
+              method: 'POST',
+              body: formData
+              // CSRF token در formData است، نیازی به header نیست
+            });
+
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            let data;
+            try {
+              const text = await response.text();
+              console.log('Response text:', text);
+              data = JSON.parse(text);
+            } catch (parseError) {
+              console.error('Error parsing JSON:', parseError);
+              throw new Error('خطا در پردازش پاسخ سرور');
+            }
+
+            console.log('Response data:', data);
+
+            if (data.success) {
+              if (messageContainer) {
+                messageContainer.innerHTML = `
+                  <div class="success-message">
+                    ${data.message}
+                  </div>
+                `;
+              }
+              // پاک کردن فرم
+              this.reset();
+              // ریست کردن ستاره‌ها
+              document.querySelectorAll('.star-input').forEach(input => input.checked = false);
+            } else {
+              if (messageContainer) {
+                messageContainer.innerHTML = `
+                  <div class="error-message">
+                    ${data.error || 'خطا در ثبت نظر'}
+                  </div>
+                `;
+              }
+            }
+          } catch (error) {
+            console.error('Error submitting form:', error);
+            if (messageContainer) {
+              messageContainer.innerHTML = `
+                <div class="error-message">
+                  خطا در ارسال نظر: ${error.message}. لطفاً دوباره تلاش کنید.
+                </div>
+              `;
+            }
+          } finally {
+            // فعال کردن مجدد دکمه
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>ثبت نظر</span>';
+            }
+          }
+
+          return false;
+        });
+
+        console.log('Event listener added successfully');
+      });
+
+      // افکت hover برای ستاره‌ها
+      document.querySelectorAll('.star-label').forEach((label, index) => {
+        label.addEventListener('mouseenter', function() {
+          // روشن کردن ستاره‌های از ابتدا تا این ستاره
+          for (let i = 0; i <= index; i++) {
+            document.querySelectorAll('.star-label')[i].style.color = '#ffd700';
+          }
+        });
+
+        label.addEventListener('mouseleave', function() {
+          // ریست کردن رنگ اگر هیچ رادیویی انتخاب نشده باشد
+          if (!document.querySelector('.star-input:checked')) {
+            document.querySelectorAll('.star-label').forEach(star => {
+              star.style.color = 'var(--white-40)';
+            });
+          } else {
+            // اگر رادیویی انتخاب شده، فقط ستاره‌های انتخاب شده را روشن نگه دار
+            const checkedInput = document.querySelector('.star-input:checked');
+            const checkedIndex = Array.from(document.querySelectorAll('.star-input')).indexOf(checkedInput);
+            document.querySelectorAll('.star-label').forEach((star, i) => {
+              if (i <= checkedIndex) {
+                star.style.color = '#ffd700';
+              } else {
+                star.style.color = 'var(--white-40)';
+              }
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
