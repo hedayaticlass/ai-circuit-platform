@@ -29,5 +29,8 @@ urlpatterns = [
         path('api/reviews/chat-history/', views.get_user_chat_history, name='get_user_chat_history'),
         path('api/chat/history/message/<int:message_id>', views.get_chat_message_content, name='get_chat_message_content'),
         path('api/chat/render-code/', views.render_python_code_api, name='render_python_code_api'),
+        path('api/schematic/generate/', views.generate_schematic_api, name='generate_schematic_api'),
+        path('api/simulation/run/', views.run_simulation_api, name='run_simulation_api'),
+        path('api/spice/generate/', views.generate_spice_api, name='generate_spice_api'),
 
 ]

@@ -97,7 +97,7 @@
     --chat-header-height: 70px; /* Approximate height of chat-header */
     --chat-input-height: 120px; /* Approximate height of chat-input-container */
   }
-  
+   
   .app-container.login-page {
     display: block;
     justify-content: unset;
@@ -714,9 +714,10 @@
   
   /* Assistant Output */
   .assistant-output {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    align-items: start; /* Align items to the start of the grid area */
   }
   
   .output-section {
@@ -727,7 +728,7 @@
     border-radius: 12px;
     padding: 16px;
     transition: all 0.3s ease;
-    margin-left: -12%;
+    margin-left: -7%;
   }
   
   .output-section:hover {
@@ -802,7 +803,31 @@
     display: block;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
-  
+
+  .circuit-image-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .image-button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .image-action-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .image-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
   .output-code {
     background: rgba(0, 0, 0, 0.4);
     padding: 16px;
@@ -905,6 +930,10 @@
   #chatInput::-webkit-scrollbar-thumb {
     background: var(--white-20);
     border-radius: 3px;
+  }
+  
+  #chatInput::-webkit-scrollbar-thumb:hover {
+    background: var(--white-30);
   }
   
   .btn-send {
@@ -1451,3 +1480,129 @@
         font-size: 11px;
     }
 }
+
+/* New styles for Circuit Design */
+.circuit-design-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Default to single column for smaller screens */
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .circuit-design-grid {
+    grid-template-columns: 2fr 1fr; /* Two columns, left wider than right */
+  }
+}
+
+.simulation-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--stroke);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.simulation-control-panel:hover {
+  border-color: var(--stroke-hover);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.simulate-circuit-btn {
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  /* Inherits most styles from .btn-glass */
+}
+
+.simulate-circuit-btn:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.simulation-description {
+  color: var(--white-60);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.circuit-image-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--stroke);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.circuit-image-container:hover {
+  border-color: var(--stroke-hover);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.output-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  transition: all 0.4s ease-in-out;
+  cursor: zoom-in;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.output-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.image-button-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.image-action-btn {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  /* Inherits most styles from .btn-glass */
+}
+
+.image-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulse { /* New animation for a subtle glow effect */
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.1); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.output-section-header:hover .output-section-title {
+  color: var(--white);
+  transition: color 0.3s ease;
+}
+
+.output-section-header:hover .collapse-icon {
+  color: var(--white);
+  transform: rotate(0deg) scale(1.1);
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.output-section.collapsed .output-section-header:hover .collapse-icon {
+  transform: rotate(-90deg) scale(1.1);
+}
+
+
