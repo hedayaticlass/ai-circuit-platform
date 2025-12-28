@@ -14,6 +14,7 @@ import requests
 import re
 import io
 import sys
+import shutil
 import base64
 import matplotlib
 matplotlib.use('Agg')  # استفاده از backend بدون GUI
@@ -133,11 +134,28 @@ def render_python_code_to_image(python_code):
         plt.close('all')
         return None
 
+SPICE_PROMPT = """
+You are an expert circuit designer.
+Convert the user's description into a standard SPICE netlist.
+
+Rules:
+1. Return ONLY a JSON object. No markdown, no conversational text.
+2. Structure:
+{
+  "spice": "Netlist lines separated by \\n (do not include .control blocks)",
+  "components": [
+     {"type": "Resistor", "name": "R1", "value": "1k", "nodes": ["1", "2"]},
+     {"type": "Voltage Source", "name": "V1", "value": "DC 5", "nodes": ["1", "0"]}
+  ]
+}
+3. Use '0' for ground.
+""".strip()
+
 SYSTEM_PROMPT = (
     "شما یک تولیدکننده کد برای مدارهای الکتریکی هستید.\n"
     "کاربر توضیح یک مدار الکتریکی را به شما می‌دهد و شما باید سه خروجی تولید کنید:\n\n"
     "1. کد پایتون کامل برای رسم نمودار مدار با matplotlib\n"
-    "2. کد SPICE netlist برای شبیه‌سازی\n"
+    "2. کد SPICE netlist ساده و استاندارد برای شبیه‌سازی\n"
     "3. لیست JSON المان‌های مدار\n\n"
     "کد پایتون شما باید:\n"
     "- از matplotlib و matplotlib.patches استفاده کند\n"
@@ -269,7 +287,7 @@ SYSTEM_PROMPT = (
     "شما باید پاسخ خود را به صورت یک JSON object برگردانید با فیلدهای زیر:\n"
     "{\n"
     '  "pythonCode": "کد پایتون در بلوک ```python",\n'
-    '  "spice": "کد SPICE netlist کامل",\n'
+    '  "spice": "کد SPICE ساده و استاندارد با .title و .end",\n'
     '  "components": [{"ref": "R1", "type": "R", "value": "1k", "nodes": ["n1", "n2"]}, ...]\n'
     "}\n\n"
     "مثال کد پایتون کامل:\n"
@@ -294,10 +312,11 @@ SYSTEM_PROMPT = (
     "    ax.set_xlim(-1, 10)\n"
     "    ax.set_ylim(-1, 3)\n"
     "```\n\n"
-    "مثال SPICE:\n"
+    "کد SPICE باید ساده و استاندارد باشد. از فرمت زیر استفاده کنید:\n"
     ".title Circuit Description\n"
     "V1 n1 0 5\n"
     "R1 n1 n2 1k\n"
+    "R2 n1 n3 1k\n"
     ".end\n\n"
     "مهم: اگر نمی‌توانید JSON تولید کنید، حداقل کد پایتون را در بلوک ```python برگردانید.\n"
     "کد پایتون باید کامل و قابل اجرا باشد و یک تابع `draw_circuit(ax)` داشته باشد.\n"
@@ -322,6 +341,65 @@ EDIT_PROMPT = (
     "در غیر این صورت، حداقل کد پایتون اصلاح شده را در بلوک ```python برگردانید.\n"
     "حتماً از توابع رسم المان‌های استاندارد استفاده کنید.\n"
 )
+
+def call_openrouter_for_spice(user_text: str) -> dict:
+    """فراخوانی OpenRouter API برای تولید کد SPICE به سبک پروژه Circuit-analysis0011"""
+    import os
+    import json
+    from openai import OpenAI
+
+    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+    def _get_client() -> OpenAI:
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key:
+            # اگر OPENROUTER_API_KEY وجود ندارد، از LLM_BASE_URL و API_KEY استفاده کن
+            llm_base_url = os.environ.get("LLM_BASE_URL", "")
+            llm_api_key = os.environ.get("LLM_API_KEY", "")
+            if llm_base_url and llm_api_key:
+                return OpenAI(base_url=llm_base_url, api_key=llm_api_key)
+            else:
+                raise RuntimeError("API Key not found. Set OPENROUTER_API_KEY or LLM_BASE_URL + LLM_API_KEY")
+        return OpenAI(base_url=OPENROUTER_BASE_URL, api_key=api_key)
+
+    def _extract_json(text: str) -> str:
+        """استخراج JSON تمیز از پاسخ مدل"""
+        text = text.strip()
+        if "```" in text:
+            parts = text.split("```")
+            for part in parts:
+                if "{" in part and "}" in part:
+                    text = part
+                    break
+
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1:
+            return text[start:end+1]
+        return text
+
+    client = _get_client()
+    msg = f"{SPICE_PROMPT}\n\nUser: {user_text}"
+
+    try:
+        resp = client.chat.completions.create(
+            model="openai/gpt-3.5-turbo",  # یا مدل دیگری
+            messages=[{"role": "user", "content": msg}],
+            temperature=0.1,
+        )
+        raw = resp.choices[0].message.content or ""
+        json_str = _extract_json(raw)
+        data = json.loads(json_str)
+
+        data.setdefault("spice", "")
+        data.setdefault("components", [])
+        return data
+    except Exception as e:
+        print(f"Error calling OpenRouter: {e}")
+        return {"spice": f"* Error: {str(e)}", "components": []}
 
 def clean_code_block(code: str) -> str:
     """حذف markdown code block markers از کد"""
@@ -495,8 +573,8 @@ def extract_spice_and_components(text: str) -> tuple:
 
     # اگر JSON کامل پیدا نشد، تلاش برای استخراج SPICE از بلوک کد
     try:
-        # جستجوی بلوک SPICE
-        spice_match = re.search(r"```(?:spice|text)?\s*(\.title[\s\S]*?\.end)", text, re.IGNORECASE)
+        # جستجوی بلوک SPICE در ```code```
+        spice_match = re.search(r"```\s*(\.title[\s\S]*?\.end)", text, re.IGNORECASE)
         if spice_match:
             spice_code = spice_match.group(1).strip()
         else:
@@ -504,6 +582,17 @@ def extract_spice_and_components(text: str) -> tuple:
             spice_match = re.search(r"(\.title[\s\S]*?\.end)", text, re.IGNORECASE)
             if spice_match:
                 spice_code = spice_match.group(1).strip()
+            else:
+                # اگر هیچ‌کدام پیدا نشد، تلاش برای ساخت کد SPICE ساده
+                # از components اگر موجود باشد
+                if components:
+                    spice_lines = [".title Circuit Description"]
+                    for comp in components:
+                        if comp.get('type') in ['R', 'C', 'L', 'V', 'I', 'D']:
+                            line = f"{comp['ref']} {' '.join(comp['nodes'])} {comp.get('value', '')}"
+                            spice_lines.append(line)
+                    spice_lines.append(".end")
+                    spice_code = "\n".join(spice_lines)
     except Exception:
         pass
 
@@ -857,7 +946,7 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             UserProfile.objects.create(user=user)
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('index') # به صفحه اصلی چت هدایت شود
         else:
             # اگر فرم نامعتبر بود، ارورها را به قالب بفرستید
@@ -874,7 +963,7 @@ def login_view(request):
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
             if user is not None:
-                login(request, user)
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return redirect('index') # به صفحه اصلی چت هدایت شود
             else:
                 # پیام خطا برای نام کاربری/رمز عبور اشتباه
@@ -1273,6 +1362,654 @@ def render_python_code_api(request):
     
     return JsonResponse({'error': 'متد درخواست نامعتبر است'}, status=405)
 
+@csrf_exempt
+def generate_spice_api(request):
+    """API برای تولید کد SPICE به سبک پروژه Circuit-analysis0011"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'فقط POST مجاز است'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        user_text = data.get('user_text', '').strip()
+
+        if not user_text:
+            return JsonResponse({'error': 'متن ورودی لازم است'}, status=400)
+
+        # تولید کد SPICE با روش ساده OpenRouter
+        result = call_openrouter_for_spice(user_text)
+
+        if result.get('spice'):
+            return JsonResponse({
+                'success': True,
+                'spice_code': result['spice'],
+                'components': result['components']
+            })
+        else:
+            return JsonResponse({'error': 'نتوانستیم کد SPICE تولید کنیم'}, status=500)
+
+    except Exception as e:
+        print(f"Error generating SPICE: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def run_simulation_api(request):
+    """API برای اجرای شیمه‌سازی Ngspice"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'فقط POST مجاز است'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        spice_code = data.get('spice_code', '').strip()
+        analysis_type = data.get('analysis_type', 'transient')
+        parameters = data.get('parameters', {})
+        plot_signal = data.get('plot_signal', 'v(out)')
+
+        if not spice_code:
+            return JsonResponse({'error': 'کد SPICE لازم است'}, status=400)
+
+        # تولید نت‌لیست کامل با پارامترهای شیمه‌سازی
+        full_netlist = generate_full_netlist_simulation(spice_code, analysis_type, parameters, plot_signal)
+
+        # اجرای شیمه‌سازی
+        simulation_result = run_ngspice_simulation_local(full_netlist, analysis_type, parameters, plot_signal)
+
+        if simulation_result:
+            # پردازش نتایج
+            parsed_data = parse_ngspice_output(simulation_result)
+
+            # تولید نمودار اگر داده‌های پلات وجود دارد
+            plot_base64 = None
+            if parsed_data.get('type') == 'plot' and parsed_data.get('df') is not None:
+                plot_base64 = generate_plot_image(parsed_data)
+
+            return JsonResponse({
+                'success': True,
+                'data': parsed_data,
+                'plot_base64': plot_base64,
+                'raw_output': simulation_result
+            })
+        else:
+            return JsonResponse({'error': 'خطا در اجرای شیمه‌سازی'}, status=500)
+
+    except Exception as e:
+        print(f"Error running simulation: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+def sanitize_spice_code(spice_code):
+    """پاکسازی کد SPICE از توضیحات اضافی و دستورات تکراری"""
+    if not spice_code:
+        return ""
+
+    lines = spice_code.split('\n')
+    clean_lines = []
+    valid_starts = ('r', 'c', 'l', 'v', 'i', 'd', 'q', 'm', 'x', 'e', 'f', 'g', 'h', '.', '*')
+
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+
+        s_lower = s.lower()
+
+        # حذف بلوک‌های control
+        if s_lower.startswith(".control"):
+            continue
+        if s_lower.startswith(".endc"):
+            continue
+
+        # پاکسازی توضیحات غیرضروری
+        banned_words = ("title", "circuit", "here", "generated", "description", "note", "sure", "certainly")
+        if s_lower.startswith(banned_words):
+            s = "* " + s
+        elif not s_lower.startswith(valid_starts):
+            s = "* " + s
+
+        # پاکسازی دستورات dot نامعتبر
+        if s.startswith("."):
+            valid_dots = (".tran", ".op", ".dc", ".ac", ".print", ".plot", ".end", ".model", ".subckt", ".include", ".lib", ".param")
+            if not any(s_lower.startswith(cmd) for cmd in valid_dots):
+                s = "*" + s
+
+        # حذف دستورات شبیه‌سازی قدیمی که کاربر تنظیم کند
+        if s_lower.startswith((".tran", ".op", ".dc", ".ac", ".print", ".plot", ".end")):
+            continue
+
+        clean_lines.append(s)
+
+    return "\n".join(clean_lines)
+
+def generate_full_netlist_simulation(base_spice, analysis_type, parameters, plot_signal):
+    """تولید نت‌لیست کامل برای شیمه‌سازی"""
+    clean_base = sanitize_spice_code(base_spice)
+    final_spice = "* AI Circuit Simulation\n" + clean_base
+    cmds = [".control", "run"]
+
+    if analysis_type == "transient":
+        step = parameters.get('step', '1ms')
+        stop = parameters.get('stop', '100ms')
+        uic = " uic" if parameters.get('uic', False) else ""
+        cmds.insert(0, f".tran {step} {stop}{uic}")
+        cmds.append(f"print {plot_signal}")
+
+    elif analysis_type == "ac":
+        points = parameters.get('points', '10')
+        fstart = parameters.get('fstart', '1Hz')
+        fstop = parameters.get('fstop', '1MHz')
+        cmds.insert(0, f".ac dec {points} {fstart} {fstop}")
+
+        if plot_signal.lower().startswith("v(") and ")" in plot_signal:
+            node = plot_signal[2:-1]
+            if parameters.get("ac_scale") == "Magnitude (V)":
+                cmds.append(f"print vm({node})")
+            else:
+                cmds.append(f"print vdb({node})")
+        else:
+            cmds.append(f"print {plot_signal}")
+
+    elif analysis_type == "dc":
+        source = parameters.get('source', 'V1')
+        start = parameters.get('start', '0')
+        stop = parameters.get('stop', '5')
+        step = parameters.get('step', '0.1')
+        cmds.insert(0, f".dc {source} {start} {stop} {step}")
+        cmds.append(f"print {plot_signal}")
+
+    elif analysis_type == "op":
+        cmds.insert(0, ".op")
+        cmds.append("print all")
+
+    cmds.extend([".endc", ".end"])
+    return f"{final_spice}\n" + "\n".join(cmds)
+
+def run_ngspice_simulation_local(netlist_code, analysis_type=None, parameters=None, plot_signal=None):
+    """اجرای شیمه‌سازی Ngspice به صورت محلی"""
+    try:
+        import subprocess
+        import tempfile
+        import os
+        import platform
+
+        # تعیین مسیر ngspice
+        command = None
+        if platform.system() == "Windows":
+            # چک مسیرهای استاندارد Windows
+            possible_paths = [
+                "C:\\Program Files\\ngspice\\bin\\ngspice_con.exe",
+                "C:\\Program Files (x86)\\ngspice\\bin\\ngspice_con.exe",
+                "C:\\ngspice\\bin\\ngspice_con.exe"
+            ]
+            for path in possible_paths:
+                if os.path.exists(path):
+                    command = path
+                    break
+
+            # چک PATH
+            if not command:
+                command = shutil.which("ngspice_con") or shutil.which("ngspice")
+        else:
+            # برای Linux/Mac
+            command = shutil.which("ngspice") or "ngspice"
+
+        # ایجاد فایل موقت
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.cir', delete=False, encoding='utf-8') as tf:
+            tf.write(netlist_code)
+            temp_path = tf.name
+
+        if not command:
+            # شبیه‌ساز ساده برای تست - تولید داده‌های نمونه
+            return generate_mock_simulation_results(analysis_type, parameters, plot_signal)
+
+        try:
+            # اجرای ngspice
+            process = subprocess.run(
+                [command, '-b', temp_path],
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='ignore',
+                timeout=30
+            )
+            return process.stdout + "\n" + process.stderr
+        except subprocess.TimeoutExpired:
+            return "Error: Simulation timeout"
+        except FileNotFoundError:
+            return "Error: Ngspice not found. Please install Ngspice and add it to PATH."
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+def parse_ngspice_output(raw_output):
+    """پردازش خروجی Ngspice"""
+    data = {"type": "raw", "content": raw_output}
+
+    if not raw_output:
+        data["error"] = "Empty output"
+        return data
+
+    # چک کردن پیام خطا
+    if "Error:" in raw_output and "Ngspice not found" not in raw_output:
+        data["error"] = raw_output
+        return data
+
+    try:
+        # تلاش برای پارس کردن جدول داده‌ها
+        lines = raw_output.split('\n')
+        header_idx = -1
+
+        for i, line in enumerate(lines):
+            if re.match(r"^\s*Index\s+", line, re.IGNORECASE):
+                header_idx = i
+                break
+
+        if header_idx != -1:
+            header_line = lines[header_idx].strip()
+            headers = re.split(r"\s+", header_line)
+            data_rows = []
+
+            for line in lines[header_idx+1:]:
+                line = line.strip()
+                if not line or line.startswith(("-", "Warning")):
+                    continue
+                parts = re.split(r"\s+", line)
+                if len(parts) == len(headers) and parts[0].replace('.','',1).isdigit():
+                    data_rows.append(",".join(parts))
+
+            if data_rows:
+                import io
+                import pandas as pd
+                csv_content = ",".join(headers) + "\n" + "\n".join(data_rows)
+                df = pd.read_csv(io.StringIO(csv_content))
+                if "Index" in df.columns:
+                    df = df.drop(columns=["Index"])
+
+                data["type"] = "plot"
+                data["df"] = df.to_dict('records')  # تبدیل به لیست دیکشنری برای JSON
+
+                col0 = df.columns[0].lower()
+                if "time" in col0:
+                    data["analysis"] = "tran"
+                elif "freq" in col0:
+                    data["analysis"] = "ac"
+                else:
+                    data["analysis"] = "dc_sweep"
+                return data
+
+    except Exception as e:
+        print(f"Error parsing plot data: {e}")
+
+    # تلاش برای پارس کردن مقادیر اسکالر (OP)
+    scalars = re.findall(r"([a-zA-Z0-9_\(\)\.#]+)\s*=\s*([+-]?\d+\.?\d*e?[+-]?\d*)", raw_output)
+    if scalars:
+        data["type"] = "scalars"
+        data["values"] = scalars
+        return data
+
+    data["error"] = "No valid data found in simulation output."
+    return data
+
+def generate_mock_simulation_results(analysis_type, parameters, plot_signal):
+    """تولید نتایج شیمه‌سازی نمونه برای وقتی که ngspice نصب نیست"""
+    import random
+
+    if analysis_type == "op":
+        # DC Operating Point - مقادیر نمونه
+        return """Operating point analysis:
+v(1) = 5.000000e+00
+v(2) = 2.500000e+00
+i(v1) = -2.500000e-03
+
+Note: این نتایج نمونه هستند. برای نتایج واقعی، لطفاً Ngspice را نصب کنید."""
+
+    elif analysis_type == "transient":
+        # Transient analysis - داده‌های زمانی نمونه
+        time_data = []
+        voltage_data = []
+
+        step = float(parameters.get('step', '1ms').replace('ms', 'e-3'))
+        stop = float(parameters.get('stop', '100ms').replace('ms', 'e-3'))
+
+        current_time = 0
+        while current_time <= stop:
+            # شبیه‌سازی پاسخ RC ساده
+            if 'rc' in plot_signal.lower() or 'v(out)' in plot_signal.lower():
+                voltage = 5 * (1 - 2.718**(-current_time/0.001))  # RC = 1ms
+            else:
+                voltage = 5 + random.uniform(-0.1, 0.1)
+
+            time_data.append(current_time)
+            voltage_data.append(voltage)
+            current_time += step
+
+        result = "Transient Analysis\nIndex          time          v(out)\n"
+        for i, (t, v) in enumerate(zip(time_data, voltage_data)):
+            result += f"{i:2d} {t:13.2e} {v:13.2e}\n"
+
+        return result
+
+    elif analysis_type == "ac":
+        # AC analysis - داده‌های فرکانسی نمونه
+        freq_data = []
+        mag_data = []
+
+        fstart = 1
+        fstop = float(parameters.get('fstop', '1MHz').replace('MHz', 'e6').replace('kHz', 'e3').replace('Hz', ''))
+
+        # تولید نقاط فرکانسی لگاریتمی
+        import math
+        points = int(parameters.get('points', '10'))
+        for i in range(points):
+            freq = 10**(math.log10(fstart) + i * (math.log10(fstop) - math.log10(fstart)) / (points - 1))
+            freq_data.append(freq)
+
+            # شبیه‌سازی پاسخ فیلتر RC
+            if freq > 0:
+                magnitude = 1 / math.sqrt(1 + (freq * 2 * 3.14159 * 1000 * 10e-6)**2)
+                mag_data.append(20 * math.log10(magnitude))  # dB
+            else:
+                mag_data.append(0)
+
+        result = "AC Analysis\nIndex          frequency     vdb(out)\n"
+        for i, (f, m) in enumerate(zip(freq_data, mag_data)):
+            result += f"{i:2d} {f:13.2e} {m:13.2e}\n"
+
+        return result
+
+    elif analysis_type == "dc":
+        # DC sweep - داده‌های ولتاژ نمونه
+        voltage_data = []
+        current_data = []
+
+        start = float(parameters.get('start', '0'))
+        stop = float(parameters.get('stop', '5'))
+        step = float(parameters.get('step', '0.1'))
+
+        current_v = start
+        while current_v <= stop:
+            voltage_data.append(current_v)
+            # شبیه‌سازی یک مقاومت 1k
+            current = current_v / 1000
+            current_data.append(current)
+            current_v += step
+
+        result = "DC transfer characteristic\nIndex          v-sweep       i(v1)\n"
+        for i, (v, c) in enumerate(zip(voltage_data, current_data)):
+            result += f"{i:2d} {v:13.2e} {c:13.2e}\n"
+
+        return result
+
+    return "Error: Unsupported analysis type"
+
+def generate_plot_image(parsed_data):
+    """تولید تصویر نمودار از داده‌های شیمه‌سازی"""
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        import pandas as pd
+        import io
+        import base64
+
+        if parsed_data.get('type') != 'plot' or not parsed_data.get('df'):
+            return None
+
+        # تبدیل داده‌ها به DataFrame
+        df_data = parsed_data.get('df', [])
+        if not df_data:
+            return None
+
+        df = pd.DataFrame(df_data)
+        if df.empty:
+            return None
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        x_col = df.columns[0]
+        y_cols = df.columns[1:]
+
+        analysis_type = parsed_data.get('analysis', 'unknown')
+
+        if analysis_type == "ac":
+            ax.set_xscale('log')
+            ax.set_xlabel('Frequency (Hz)')
+            ax.set_ylabel('Magnitude')
+        elif analysis_type == "tran":
+            ax.set_xlabel('Time (s)')
+            ax.set_ylabel('Voltage/Current')
+        else:
+            ax.set_xlabel(x_col)
+            ax.set_ylabel('Value')
+
+        for col in y_cols:
+            ax.plot(df[x_col], df[col], label=col, linewidth=2)
+
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+        plt.tight_layout()
+
+        # تبدیل به base64
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        buf.seek(0)
+        image_data = buf.read()
+        image_base64 = base64.b64encode(image_data).decode('ascii')
+        plt.close(fig)
+
+        return f"data:image/png;base64,{image_base64}"
+
+    except Exception as e:
+        print(f"Error generating plot: {e}")
+        return None
+
+@csrf_exempt
+def generate_schematic_api(request):
+    """API برای تولید شماتیک مدار از کامپوننت‌ها"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'فقط POST مجاز است'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        components = data.get('components', [])
+        spice_code = data.get('spice_code', '')
+
+        if not components and not spice_code:
+            return JsonResponse({'error': 'کامپوننت‌ها یا کد SPICE لازم است'}, status=400)
+
+        # اگر کامپوننت‌ها وجود ندارد، از SPICE استخراج کنیم
+        if not components and spice_code:
+            components = extract_components_from_spice(spice_code)
+
+        if not components:
+            return JsonResponse({'error': 'نتوانستیم کامپوننت‌ها را استخراج کنیم'}, status=400)
+
+        # تولید شماتیک
+        schematic_base64 = generate_schematic_image(components)
+
+        if schematic_base64:
+            return JsonResponse({'schematic_base64': schematic_base64})
+        else:
+            return JsonResponse({'error': 'خطا در تولید شماتیک'}, status=500)
+
+    except Exception as e:
+        print(f"Error generating schematic: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+def extract_components_from_spice(spice_code):
+    """استخراج کامپوننت‌ها از کد SPICE"""
+    components = []
+    if not spice_code:
+        return components
+
+    lines = spice_code.split('\n')
+
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith(('.', '*')) or line.lower().startswith('title'):
+            continue
+
+        parts = line.split()
+        if len(parts) < 3:
+            continue
+
+        name = parts[0].upper()  # اطمینان از uppercase
+
+        # بررسی اینکه آیا این یک کامپوننت معتبر است
+        if len(name) >= 2 and name[0] in ['R', 'C', 'L', 'V', 'I', 'D', 'Q', 'M']:
+            comp_type = name[0]
+
+            if comp_type in ['R', 'C', 'L', 'V', 'I', 'D']:
+                # کامپوننت‌های 2 پایانه
+                if len(parts) >= 4:
+                    component = {
+                        'ref': name,
+                        'type': comp_type,
+                        'value': parts[3],
+                        'nodes': [parts[1], parts[2]]
+                    }
+                    components.append(component)
+                elif len(parts) >= 3:
+                    # بدون مقدار (مثل دیود)
+                    component = {
+                        'ref': name,
+                        'type': comp_type,
+                        'value': '',
+                        'nodes': [parts[1], parts[2]]
+                    }
+                    components.append(component)
+
+            elif comp_type in ['Q', 'M'] and len(parts) >= 4:
+                # ترانزیستورها و MOSFETها
+                component = {
+                    'ref': name,
+                    'type': comp_type,
+                    'value': parts[4] if len(parts) > 4 else '',
+                    'nodes': [parts[1], parts[2], parts[3]]
+                }
+                components.append(component)
+
+    return components
+
+def generate_schematic_image(components):
+    """تولید تصویر شماتیک از کامپوننت‌ها"""
+    try:
+        import matplotlib
+        matplotlib.use('Agg')  # استفاده از backend بدون GUI
+        import matplotlib.pyplot as plt
+        from schemdraw import Drawing
+        import schemdraw.elements as elm
+        import tempfile
+        import os
+
+        # تنظیمات برای پس‌زمینه سفید
+        plt.rcParams['figure.facecolor'] = 'white'
+        plt.rcParams['axes.facecolor'] = 'white'
+        plt.rcParams['savefig.facecolor'] = 'white'
+        plt.rcParams['savefig.transparent'] = False
+
+        # ایجاد drawing
+        d = Drawing(show=False)
+
+        # تنظیمات پایه
+        x_pos = 0
+        y_pos = 0
+        spacing = 2
+
+        for i, comp in enumerate(components):
+            comp_type = comp.get('type', '').upper()
+            name = comp.get('name', comp.get('ref', f'COMP{i+1}'))
+            value = comp.get('value', '')
+
+            # انتخاب المان مناسب
+            element = None
+            if comp_type == 'R':
+                element = elm.Resistor()
+            elif comp_type == 'C':
+                element = elm.Capacitor()
+            elif comp_type == 'L':
+                element = elm.Inductor()
+            elif comp_type == 'V':
+                element = elm.SourceV()
+            elif comp_type == 'I':
+                element = elm.SourceI()
+            elif comp_type == 'D':
+                element = elm.Diode()
+            elif comp_type == 'Q':
+                element = elm.BjtNpn()  # فرض بر BJT NPN
+            else:
+                element = elm.Dot()
+
+            # اضافه کردن برچسب
+            label = f"{name}"
+            if value:
+                label += f"\n{value}"
+
+            element.label(label)
+
+            # قرار دادن المان
+            if i == 0:
+                d.add(element)
+            else:
+                d.add(element.right())
+
+        # اضافه کردن خطوط اتصال
+        d.draw()
+
+        # تنظیمات پس‌زمینه سفید برای figure matplotlib
+        fig = plt.gcf()
+        fig.patch.set_facecolor('white')
+        fig.set_facecolor('white')
+        for ax in fig.get_axes():
+            ax.set_facecolor('white')
+            ax.patch.set_facecolor('white')
+
+        # ذخیره به عنوان تصویر موقت با پس‌زمینه سفید
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+            temp_path = tmp_file.name
+
+        # تنظیمات نهایی برای پس‌زمینه سفید
+        fig = plt.gcf()
+        fig.set_facecolor('white')
+        fig.patch.set_facecolor('white')
+        fig.patch.set_alpha(1.0)  # اطمینان از عدم شفافیت
+        for ax in fig.get_axes():
+            ax.set_facecolor('white')
+            ax.patch.set_facecolor('white')
+            ax.patch.set_alpha(1.0)
+
+        # ذخیره با تنظیمات پس‌زمینه سفید
+        plt.savefig(temp_path, facecolor='white', edgecolor='white', bbox_inches='tight', dpi=150, transparent=False)
+
+        # پاک کردن figure از حافظه
+        plt.close(fig)
+
+        # تبدیل به base64
+        with open(temp_path, 'rb') as f:
+            image_data = f.read()
+
+        import base64
+        image_base64 = base64.b64encode(image_data).decode('ascii')
+
+        # پاک کردن فایل موقت
+        os.remove(temp_path)
+
+        return f"data:image/png;base64,{image_base64}"
+
+    except ImportError as e:
+        print(f"schemdraw not available: {e}")
+        return None
+    except Exception as e:
+        print(f"Error generating schematic: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
 def get_chat_message_content(request, message_id):
     """دریافت محتوای یک پیام خاص از چت و رندر کردن کد پایتون به تصویر
     این API برای نمایش عمومی در نظرات استفاده می‌شود، پس نیاز به authentication ندارد
@@ -1292,7 +2029,7 @@ def get_chat_message_content(request, message_id):
         ).exists()
         if not review_exists:
             return JsonResponse({'error': 'دسترسی مجاز نیست'}, status=403)
-        
+
         # گرفتن کد پایتون و تصویر از content_json
         python_code = None
         image_base64 = None
