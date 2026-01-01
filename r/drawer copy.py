@@ -227,6 +227,24 @@ def parse_and_run():
         drawer.add_component(comp)
 
     drawer.render("complex_circuit.png")
+    
+    
+def render_schematics():
+    
 
 if __name__ == "__main__":
-    parse_and_run()
+    # parse_and_run()
+    txt = """R1 1 2 1k
+C1 2 0 10u
+D1 2 3 1N4148
+D2 3 0 1N4733A
+Q1 2 4 0 2N2222
+R2 4 0 1k
+J1 1 5 0 J2N5457
+R3 5 0 4k7
+M1 1 6 0 0 IRF530
+R4 6 0 3k3
+U1 2 3 7 0 1 OPAMP
+R5 7 3 100k
+R6 7 0 10k"""
+    render_schematics
