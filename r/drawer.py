@@ -212,9 +212,10 @@ def draw_component(d, comp, direction='right'):
     else:
         return d.add(elm_obj.down().label(label))
 
-def spice_to_schematic(netlist_text):
+def spice_to_schematic(components, parsed = True):
     """تبدیل کد SPICE به شماتیک"""
-    components = parse_netlist(netlist_text)
+    if not parsed:
+        components = parse_netlist(components)
     
     if not components:
         return None, "❌ هیچ قطعه‌ای یافت نشد!"
@@ -294,8 +295,14 @@ def spice_to_schematic(netlist_text):
     return d, None
     
     
-def render_schematics(netlist, save_path="schematic.png", show=False):
-    drawing, error = spice_to_schematic(netlist)
+def render_schematics(netlist, save_path="schematic.png", show=False, parsed = True):
+    """
+    netlist is the components or the component. if you have used parser.py for parsing it, use as
+        >>> render_schematics(components, save_path=...)
+    else, use as
+        >>> render_schematics(netlist : str, save_path=..., parsed = False)
+    """
+    drawing, error = spice_to_schematic(netlist, parsed=parsed)
     drawing.save(save_path)
     if show == True:
         drawing.draw()
