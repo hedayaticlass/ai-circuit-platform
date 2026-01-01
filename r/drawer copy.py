@@ -229,22 +229,40 @@ def parse_and_run():
     drawer.render("complex_circuit.png")
     
     
-def render_schematics():
+def render_schematics(netlist):
+    lines = netlist.split("\n")
+    drawer = CircuitDrawer()
     
+    for line in lines:
+        parts = line.split()
+        if not parts: continue
+        
+        name = parts[0]
+        type_char = name[0].upper()
+        
+        comp = {"name": name, "type": "R", "nodes": [], "value": ""}
+        
+        if type_char == "U": 
+             comp["type"] = "OPAMP"
+             comp["nodes"] = parts[1:4]
+        elif type_char == "Q":
+             comp["type"] = "Q"
+             comp["nodes"] = parts[1:4]
+             comp["value"] = parts[4] if len(parts)>4 else ""
+        elif type_char == "M":
+             comp["type"] = "M"
+             comp["nodes"] = parts[1:4]
+             comp["value"] = parts[5] if len(parts)>5 else ""
+        else:
+             comp["type"] = type_char
+             comp["nodes"] = parts[1:3]
+             comp["value"] = parts[3] if len(parts)>3 else ""
+             
+        drawer.add_component(comp)
+
+    drawer.render("complex_circuit.png")
 
 if __name__ == "__main__":
     # parse_and_run()
-    txt = """R1 1 2 1k
-C1 2 0 10u
-D1 2 3 1N4148
-D2 3 0 1N4733A
-Q1 2 4 0 2N2222
-R2 4 0 1k
-J1 1 5 0 J2N5457
-R3 5 0 4k7
-M1 1 6 0 0 IRF530
-R4 6 0 3k3
-U1 2 3 7 0 1 OPAMP
-R5 7 3 100k
-R6 7 0 10k"""
-    render_schematics
+    txt = """.title RC Low-Pass Filter\nV1 1 0 5\nR1 1 2 10k\nC1 2 0 10nF\n.end"""
+    render_schematics(txt)
