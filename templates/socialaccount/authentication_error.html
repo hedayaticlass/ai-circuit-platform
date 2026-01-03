@@ -1,0 +1,37 @@
+{% extends "socialaccount/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Social Network Login Failure" %}{% endblock %}
+
+{% block content %}
+<div class="auth-header">
+    <h1 class="auth-title">{% trans "Social Network Login Failure" %}</h1>
+</div>
+
+<div class="error-message">
+    <p>{% trans "An error occurred while attempting to login via your social network account." %}</p>
+    <p class="error-details">{{ auth_error }}</p>
+</div>
+
+<div class="auth-footer">
+    <a href="{% url 'account_login' %}" class="auth-btn">{% trans "Try Again" %}</a>
+</div>
+
+<style>
+    .error-message {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background-color: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        color: var(--danger-color);
+        border-radius: var(--border-radius-md);
+    }
+
+    .error-details {
+        margin-top: 1rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}

@@ -682,34 +682,128 @@
         border-radius: 12px;
       }
 
-      /* سکشن آمار - تم مینیمال */
+      /* سکشن آمار - طراحی مدرن */
+      .reviews-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        gap: 2rem;
+      }
+
+      .reviews-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--white);
+        margin: 0;
+        letter-spacing: -0.8px;
+        background: linear-gradient(135deg, var(--white), var(--white-80));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .reviews-header-actions {
+        flex-shrink: 0;
+      }
+
+      .btn-write-review {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem 1.5rem;
+        background: rgba(99, 102, 241, 0.4);
+        border: 1px solid rgba(99, 102, 241, 0.5);
+        border-radius: 12px;
+        color: var(--white-90);
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .btn-write-review::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s;
+      }
+
+      .btn-write-review:hover::before {
+        left: 100%;
+      }
+
+      .btn-write-review:hover {
+        background: linear-gradient(135deg, var(--white-15), var(--white-8));
+        border-color: rgba(99, 102, 241, 0.7);
+        color: var(--white);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+      }
+
+      .btn-write-review .btn-text {
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+
       .reviews-stats-section {
-        background: rgba(255, 255, 255, 0.01);
-        border-radius: 16px;
-        padding: 3rem 2rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.005));
+        border-radius: 20px;
+        padding: 3rem 2.5rem;
         border: 1px solid var(--stroke);
-        margin-top: 2rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .reviews-stats-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      }
+
+      .reviews-stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2.5rem;
+        gap: 2rem;
       }
 
       .reviews-stats-hero {
-        text-align: center;
-        margin-bottom: 2.5rem;
+        flex: 1;
       }
 
       .reviews-stats-hero h3 {
-        font-size: 1.8rem;
-        font-weight: 500;
+        font-size: 2rem;
+        font-weight: 600;
         color: var(--white);
-        margin-bottom: 0.75rem;
-        letter-spacing: -0.3px;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, var(--white), var(--white-80));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .reviews-stats-hero p {
         color: var(--white-60);
-        line-height: 1.5;
-        font-size: 1rem;
+        line-height: 1.6;
+        font-size: 1.1rem;
         font-weight: 400;
-        max-width: 450px;
+        margin: 0;
         margin: 0 auto;
       }
 
@@ -925,9 +1019,79 @@
         background: linear-gradient(90deg, #ffd700, #ffed4e);
       }
 
-      .reviews-cta-landing {
-        text-align: center;
-        margin-top: 2rem;
+      .reviews-stats-cta {
+        flex-shrink: 0;
+      }
+
+      .btn-reviews-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem 1.5rem;
+        background: linear-gradient(135deg, var(--white-10), var(--white-5));
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        color: var(--white-90);
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .btn-reviews-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s;
+      }
+
+      .btn-reviews-primary:hover::before {
+        left: 100%;
+      }
+
+      .btn-reviews-primary:hover {
+        background: linear-gradient(135deg, var(--white-15), var(--white-8));
+        border-color: var(--white-30);
+        color: var(--white);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-reviews-primary .btn-text {
+        font-weight: 500;
+        letter-spacing: 0.3px;
+      }
+
+      .btn-reviews-primary .btn-icon {
+        font-size: 1.1em;
+        transition: transform 0.3s ease;
+        opacity: 0.8;
+      }
+
+      .btn-reviews-primary:hover .btn-icon {
+        transform: translateX(3px);
+        opacity: 1;
+      }
+
+      /* RTL Support for Button */
+      [dir="rtl"] .btn-reviews-primary .btn-icon {
+        transform: scaleX(-1);
+      }
+
+      [dir="rtl"] .btn-reviews-primary:hover .btn-icon {
+        transform: scaleX(-1) translateX(-3px);
+      }
+
+      .reviews-stats-content {
+        margin-top: 1rem;
       }
 
       .reviews-grid {
@@ -1343,12 +1507,50 @@
           max-height: 140px;
         }
 
+        .reviews-header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .reviews-title {
+          font-size: 2rem;
+        }
+
+        .btn-write-review {
+          width: 100%;
+          justify-content: center;
+          padding: 1rem 1.5rem;
+        }
+
         .reviews-stats-section {
-          padding: 2rem 1rem;
+          padding: 2rem 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .reviews-stats-header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1.5rem;
         }
 
         .reviews-stats-hero h3 {
-          font-size: 1.6rem;
+          font-size: 1.8rem;
+        }
+
+        .reviews-stats-hero p {
+          font-size: 1rem;
+        }
+
+        .btn-reviews-primary {
+          width: 100%;
+          justify-content: center;
+          padding: 1rem 1.5rem;
+        }
+
+        .reviews-stats-content {
+          margin-top: 1.5rem;
         }
 
         .rating-stats-header {
@@ -1754,13 +1956,42 @@
       <!-- Reviews Section -->
       <section id="reviews" class="reviews-section">
         <div class="reviews-container">
-          <h2 class="reviews-title" data-lang-key="user-reviews">نظرات کاربران</h2>
-          <div class="reviews-stats" id="landingReviewsStats">
-            <div class="loading">
-              <div class="loading-spinner"></div>
-              <p data-lang-key="loading-stats">بارگذاری آمار...</p>
+          <div class="reviews-header">
+            <h2 class="reviews-title" data-lang-key="user-reviews">نظرات کاربران</h2>
+            <div class="reviews-header-actions">
+              <a href="{% url 'reviews_page' %}" class="btn-write-review" data-lang-key="write-review">
+                <span class="btn-text">نوشتن نظر</span>
+                <span class="btn-icon">✍️</span>
+              </a>
             </div>
           </div>
+
+          <!-- سکشن آمار و CTA -->
+          <div class="reviews-stats-section">
+            <div class="reviews-stats-header">
+              <div class="reviews-stats-hero">
+                <h3 data-lang-key="stats-overview">آمار کلی</h3>
+                <p data-lang-key="stats-overview-desc">نظرات تأیید شده و آمار رضایت کاربران</p>
+              </div>
+
+              <div class="reviews-stats-cta">
+                <a href="{% url 'reviews_list' %}" class="btn-reviews-primary" data-lang-key="view-all-reviews">
+                  <span class="btn-text">مشاهده همه نظرات</span>
+                  <span class="btn-icon">→</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="reviews-stats-content">
+              <div class="reviews-stats" id="landingReviewsStats">
+                <div class="loading">
+                  <div class="loading-spinner-modern"></div>
+                  <p data-lang-key="loading-stats">بارگذاری آمار...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- سکشن نظرات ویژه -->
           <div class="featured-reviews-section">
             <div class="featured-reviews-container">
@@ -1775,25 +2006,6 @@
                   <p data-lang-key="loading-reviews">بارگذاری نظرات...</p>
               </div>
               </div>
-            </div>
-          </div>
-
-          <!-- سکشن آمار و CTA -->
-          <div class="reviews-stats-section">
-            <div class="reviews-stats-hero">
-              <h3 data-lang-key="stats-overview">آمار کلی</h3>
-              <p data-lang-key="stats-overview-desc">نظرات تأیید شده و آمار رضایت کاربران</p>
-            </div>
-
-            <div class="reviews-stats" id="landingReviewsStats">
-              <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>در حال بارگذاری آمار...</p>
-              </div>
-            </div>
-
-            <div class="reviews-cta-landing">
-              <a href="{% url 'reviews_list' %}" class="btn-secondary">مشاهده همه نظرات</a>
             </div>
           </div>
         </div>
@@ -1880,6 +2092,8 @@
           'circuit-image-label': 'Circuit Image',
           'stats-overview': 'Overview',
           'stats-overview-desc': 'Approved reviews and user satisfaction statistics',
+          'view-all-reviews': 'View All Reviews',
+          'write-review': 'Write a Review',
           'loading-reviews': 'Loading reviews...',
           'loading-stats': 'Loading stats...',
           'average-rating': 'Average Rating',
@@ -1941,6 +2155,8 @@
           'circuit-image-label': 'تصویر مدار',
           'stats-overview': 'آمار کلی',
           'stats-overview-desc': 'نظرات تأیید شده و آمار رضایت کاربران',
+          'view-all-reviews': 'مشاهده همه نظرات',
+          'write-review': 'نوشتن نظر',
           'loading-reviews': 'بارگذاری نظرات...',
           'loading-stats': 'بارگذاری آمار...',
           'average-rating': 'میانگین امتیاز',
@@ -3358,13 +3574,70 @@
             color: #44ff44;
           }
           
-          /* Loading */
+          /* Loading Modern */
           .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 2rem;
+            min-height: 120px;
+          }
+
+          .loading-spinner-modern {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--stroke);
+            border-top: 3px solid var(--white-60);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: relative;
+          }
+
+          .loading-spinner-modern::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--white-30);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite reverse;
+          }
+
+          .loading p {
+            color: var(--white-60);
+            font-size: 0.9rem;
+            font-weight: 400;
+            margin: 0;
+            text-align: center;
+          }
+
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          /* Loading Legacy */
+          .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--stroke);
+            border-top: 2px solid var(--white-60);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+
+          /* Legacy Loading Dots */
+          .loading-dots {
             display: inline-flex;
             gap: 6px;
             align-items: center;
           }
-          
+
           .loading-dot {
             width: 6px;
             height: 6px;
@@ -3372,15 +3645,15 @@
             background: var(--white-60);
             animation: bounce 1.4s infinite ease-in-out both;
           }
-          
+
           .loading-dot:nth-child(1) {
             animation-delay: -0.32s;
           }
-          
+
           .loading-dot:nth-child(2) {
             animation-delay: -0.16s;
           }
-          
+
           @keyframes bounce {
             0%, 80%, 100% {
               transform: scale(0);
