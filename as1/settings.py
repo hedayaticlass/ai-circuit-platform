@@ -12,8 +12,12 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os  # اضافه کردن این خط در ابتدای فایل
+from dotenv import load_dotenv  # اضافه کردن این خط برای بارگذاری فایل .env
 
 from django.template.context_processors import static
+
+# بارگذاری متغیرهای محیطی از فایل .env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,12 +27,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$!^5vlt3_3^s-65mvd^w6ny#&sj4i6k1co2xtdqw(@p5xe#+$i'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-$!^5vlt3_3^s-65mvd^w6ny#&sj4i6k1co2xtdqw(@p5xe#+$i')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['kafshkabir.ir', 'www.kafshkabir.ir',  '127.0.0.1', 'localhost', 'kafshkabirqom.serveo.net',
-                 'kiiwk3efy6y2.connect.remote.it']
+                 'kiiwk3efy6y2.connect.remote.it', '127.0.0.1:8001']
 
 
 # Application definition
@@ -40,6 +45,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     'home',
     'django_jalali',
     'django_extensions',
@@ -56,6 +66,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -67,7 +79,11 @@ ROOT_URLCONF = 'as1.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'templates',
+            BASE_DIR / 'as1' / 'templates',
+            BASE_DIR / 'as1' / 'templates' / 'socialaccount',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -141,7 +157,64 @@ CSRF_TRUSTED_ORIGINS =[
     'https://kafshkabirqom.serveo.net',
 ]
 
-OPENAI_API_KEY = 'sk-aaaf76c4d38549a79a3b4eb9a81f762c'
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'sk-aaaf76c4d38549a79a3b4eb9a81f762c')
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SITE_ID = 1
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+            'key': ''
+        },
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+            'prompt': 'select_account'
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    }
+}
+
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# تنظیمات allauth
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # یا 'mandatory' یا 'optional'
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+
+# تنظیمات template directories
+ACCOUNT_TEMPLATE_DIRS = [
+    BASE_DIR / 'templates',
+    BASE_DIR / 'as1' / 'templates',
+]
+
+# تنظیمات social account
+SOCIALACCOUNT_AUTO_SIGNUP = False
+SOCIALACCOUNT_LOGIN_ON_GET = False
+SOCIALACCOUNT_STORE_TOKENS = True
+SOCIALACCOUNT_ADAPTER = 'home.adapters.CustomSocialAccountAdapter'
+
+# تنظیمات برای صفحه میانی زیبا
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = False
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+SOCIALACCOUNT_LOGIN_REDIRECT_URL = '/'
+SOCIALACCOUNT_SIGNUP_REDIRECT_URL = '/'
+
+# تنظیمات پیشرفته
+SOCIALACCOUNT_QUERY_EMAIL = True
+
+# تنظیمات template directories برای socialaccount
+SOCIALACCOUNT_TEMPLATE_DIRS = [
+    BASE_DIR / 'templates',
+    BASE_DIR / 'as1' / 'templates',
+]
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

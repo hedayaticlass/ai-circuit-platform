@@ -1,27 +1,35 @@
-{% extends "account/base.html" %}
+{% extends "socialaccount/base.html" %}
 
-{% block head_title %}خروج از سیستم{% endblock %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Sign Out" %}{% endblock %}
 
 {% block content %}
-<div style="text-align: center;">
-  <h3 style="color: var(--white-80); margin-bottom: 20px;">خروج از سیستم</h3>
+<div class="auth-header">
+    <h1 class="auth-title">{% trans "Sign Out" %}</h1>
+    <p class="auth-subtitle">{% trans 'Are you sure you want to sign out?' %}</p>
+</div>
 
-  <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--stroke); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
-    <p style="color: var(--white-70); margin-bottom: 15px;">آیا مطمئن هستید که می‌خواهید از سیستم خارج شوید؟</p>
-  </div>
-
-  <form method="post" action="{% url 'account_logout' %}">
+<form method="post" action="{% url 'account_logout' %}">
     {% csrf_token %}
     {% if redirect_field_value %}
-    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
     {% endif %}
-    <div style="display: flex; flex-direction: column; gap: 15px;">
-      <button type="submit" class="login-button" style="background: rgba(255, 68, 68, 0.2); border-color: rgba(255, 68, 68, 0.4); color: #ff6b6b;">
-        خروج از سیستم
-      </button>
 
-      <a href="{% url 'index' %}" class="login-button">بازگشت به صفحه اصلی</a>
+    <div class="logout-actions">
+        <button class="auth-btn" type="submit">{% trans 'Sign Out' %}</button>
+        <a href="{% url 'home' %}" class="auth-btn secondary">{% trans 'Cancel' %}</a>
     </div>
-  </form>
-</div>
+</form>
+
+<style>
+    .logout-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .auth-btn.secondary {
+        background: var(--gradient-secondary);
+    }
+</style>
 {% endblock %}

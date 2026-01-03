@@ -967,7 +967,8 @@ def login_view(request):
                 return redirect('index') # به صفحه اصلی چت هدایت شود
             else:
                 # پیام خطا برای نام کاربری/رمز عبور اشتباه
-                return render(request, 'index.html', {'login_form': form, 'show_login': True, 'error_message': 'نام کاربری یا رمز عبور اشتباه است.'})
+                form.add_error(None, 'نام کاربری یا رمز عبور اشتباه است.')
+                return render(request, 'index.html', {'login_form': form, 'show_login': True})
         else:
             # اگر فرم نامعتبر بود، ارورها را به قالب بفرستید
             return render(request, 'index.html', {'login_form': form, 'show_login': True})

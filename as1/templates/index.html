@@ -1,6 +1,7 @@
 {% load socialaccount %}
 {% load account %}
 {% load static %}
+{% load allauth socialaccount %}
 <!doctype html>
 <html lang="fa" dir="rtl">
   <head>
@@ -243,7 +244,7 @@
 
           {% if signup_form %}
             <!-- دکمه ثبت نام با گوگل -->
-            <a href="{% provider_login_url 'google' %}" class="google-signup-btn" data-lang-key="signup-with-google">
+            <a href="/accounts/google/login/?process=signup" class="google-signup-btn" data-lang-key="signup-with-google">
               <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -259,21 +260,56 @@
 
             <form method="post" action="{% url 'signup' %}">
                 {% csrf_token %}
+                {% if signup_form.non_field_errors %}
+                    <div class="error-message">
+                        {% for error in signup_form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 <div class="form-group">
                   <label for="{{ signup_form.username.id_for_label }}" data-lang-key="username">نام کاربری</label>
-                  <input type="text" name="username" id="{{ signup_form.username.id_for_label }}" class="input-glass" placeholder="نام کاربری خود را وارد کنید" required>
+                  <input type="text" name="username" id="{{ signup_form.username.id_for_label }}" class="input-glass" data-lang-key="username-placeholder" placeholder="نام کاربری خود را وارد کنید" required>
+                  {% if signup_form.username.errors %}
+                      <div class="field-error">
+                          {% for error in signup_form.username.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                      </div>
+                  {% endif %}
                 </div>
                 <div class="form-group">
                   <label for="{{ signup_form.email.id_for_label }}" data-lang-key="email">ایمیل</label>
-                  <input type="email" name="email" id="{{ signup_form.email.id_for_label }}" class="input-glass" placeholder="ایمیل خود را وارد کنید" required>
+                  <input type="email" name="email" id="{{ signup_form.email.id_for_label }}" class="input-glass" data-lang-key="email-placeholder" placeholder="ایمیل خود را وارد کنید" required>
+                  {% if signup_form.email.errors %}
+                      <div class="field-error">
+                          {% for error in signup_form.email.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                      </div>
+                  {% endif %}
                 </div>
                 <div class="form-group">
                   <label for="{{ signup_form.password1.id_for_label }}" data-lang-key="password">رمز عبور</label>
-                  <input type="password" name="password1" id="{{ signup_form.password1.id_for_label }}" class="input-glass" placeholder="رمز عبور خود را وارد کنید" required>
+                  <input type="password" name="password1" id="{{ signup_form.password1.id_for_label }}" class="input-glass" data-lang-key="password-placeholder" placeholder="رمز عبور خود را وارد کنید" required>
+                  {% if signup_form.password1.errors %}
+                      <div class="field-error">
+                          {% for error in signup_form.password1.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                      </div>
+                  {% endif %}
                 </div>
                 <div class="form-group">
                   <label for="{{ signup_form.password2.id_for_label }}" data-lang-key="confirm-password">تکرار رمز عبور</label>
-                  <input type="password" name="password2" id="{{ signup_form.password2.id_for_label }}" class="input-glass" placeholder="رمز عبور را تکرار کنید" required>
+                  <input type="password" name="password2" id="{{ signup_form.password2.id_for_label }}" class="input-glass" data-lang-key="confirm-password-placeholder" placeholder="رمز عبور را تکرار کنید" required>
+                  {% if signup_form.password2.errors %}
+                      <div class="field-error">
+                          {% for error in signup_form.password2.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                      </div>
+                  {% endif %}
                 </div>
                 <button type="submit" class="login-button" data-lang-key="signup">ثبت نام</button>
             </form>
@@ -283,7 +319,7 @@
             </div>
           {% elif login_form %}
             <!-- دکمه ورود با گوگل -->
-            <a href="{% provider_login_url 'google' %}" class="google-signup-btn" data-lang-key="login-with-google">
+            <a href="/accounts/google/login/?process=login" class="google-signup-btn" data-lang-key="login-with-google">
               <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -301,14 +337,37 @@
                 {% csrf_token %}
                 <div class="form-group">
                   <label for="{{ login_form.username.id_for_label }}" data-lang-key="username-or-email">نام کاربری یا ایمیل</label>
-                  <input type="text" name="username" id="{{ login_form.username.id_for_label }}" class="input-glass" placeholder="نام کاربری یا ایمیل خود را وارد کنید" required>
+                  <input type="text" name="username" id="{{ login_form.username.id_for_label }}" class="input-glass" data-lang-key="username-or-email-placeholder" placeholder="نام کاربری یا ایمیل خود را وارد کنید" required>
+                  {% if login_form.username.errors %}
+                      <div class="field-error">
+                          {% for error in login_form.username.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                      </div>
+                  {% endif %}
                 </div>
                 <div class="form-group">
                   <label for="{{ login_form.password.id_for_label }}" data-lang-key="password">رمز عبور</label>
-                  <input type="password" name="password" id="{{ login_form.password.id_for_label }}" class="input-glass" placeholder="رمز عبور خود را وارد کنید" required>
+                  <input type="password" name="password" id="{{ login_form.password.id_for_label }}" class="input-glass" data-lang-key="password-placeholder" placeholder="رمز عبور خود را وارد کنید" required>
+                  {% if login_form.password.errors %}
+                      <div class="field-error">
+                          {% for error in login_form.password.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                      </div>
+                  {% endif %}
                 </div>
+                {% if login_form.non_field_errors %}
+                    <div class="error-message">
+                        {% for error in login_form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 {% if error_message %}
-                    <p class="error-message">{{ error_message }}</p>
+                    <div class="error-message">
+                        <p>{{ error_message }}</p>
+                    </div>
                 {% endif %}
                 <button type="submit" class="login-button" data-lang-key="login">ورود</button>
             </form>
@@ -359,10 +418,15 @@
           'email': 'Email',
           'password': 'Password',
           'confirm-password': 'Confirm Password',
+          'username-placeholder': 'Enter your username',
+          'email-placeholder': 'Enter your email',
+          'password-placeholder': 'Enter your password',
+          'confirm-password-placeholder': 'Confirm your password',
           'signup': 'Sign Up',
           'have-account': 'Have an account?',
           'login': 'Login',
           'username-or-email': 'Username or Email',
+          'username-or-email-placeholder': 'Enter your username or email',
           'no-account': 'Don\'t have an account?',
           'signup-link': 'Sign up',
           'please-login-signup': 'Please login or sign up to access the chat.'
@@ -395,10 +459,15 @@
           'email': 'ایمیل',
           'password': 'رمز عبور',
           'confirm-password': 'تکرار رمز عبور',
+          'username-placeholder': 'نام کاربری خود را وارد کنید',
+          'email-placeholder': 'ایمیل خود را وارد کنید',
+          'password-placeholder': 'رمز عبور خود را وارد کنید',
+          'confirm-password-placeholder': 'رمز عبور را تکرار کنید',
           'signup': 'ثبت نام',
           'have-account': 'حساب کاربری دارید؟',
           'login': 'ورود',
           'username-or-email': 'نام کاربری یا ایمیل',
+          'username-or-email-placeholder': 'نام کاربری یا ایمیل خود را وارد کنید',
           'no-account': 'حساب کاربری ندارید؟',
           'signup-link': 'ثبت نام کنید',
           'please-login-signup': 'لطفاً وارد شوید یا ثبت نام کنید تا به چت دسترسی پیدا کنید.'
@@ -433,6 +502,13 @@
         // Update document direction
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+
+        // Update login container direction
+        const loginContainer = document.querySelector('.login-container');
+        if (loginContainer) {
+          loginContainer.classList.remove('rtl', 'ltr');
+          loginContainer.classList.add(lang === 'fa' ? 'rtl' : 'ltr');
+        }
 
         // Save language preference
         localStorage.setItem('circuit-ai-lang', lang);
@@ -3795,6 +3871,70 @@ function toggleSettingsHistory() {
         background: var(--bg-black);
         padding: 20px;
     }
+
+    /* RTL Styles for login forms */
+    .login-container.rtl {
+        direction: rtl;
+    }
+
+    .login-container.rtl .login-form .form-group {
+        text-align: right;
+    }
+
+    .login-container.rtl .login-form label {
+        text-align: right;
+    }
+
+    .login-container.rtl .field-error {
+        text-align: right;
+    }
+
+    .login-container.rtl .error-message {
+        text-align: center;
+    }
+
+    /* LTR Styles for login forms */
+    .login-container.ltr {
+        direction: ltr;
+    }
+
+    .login-container.ltr .login-form .form-group {
+        text-align: left;
+    }
+
+    .login-container.ltr .login-form label {
+        text-align: left;
+    }
+
+    .login-container.ltr .field-error {
+        text-align: left;
+    }
+
+      .login-container.ltr .error-message {
+        text-align: center;
+    }
+
+      /* Responsive adjustments for login forms */
+      @media (max-width: 768px) {
+        .login-container {
+          padding: 10px;
+        }
+
+        .login-form {
+          padding: 30px 20px;
+          max-width: 100%;
+        }
+
+        .login-container.rtl .login-form .form-group,
+        .login-container.ltr .login-form .form-group {
+          text-align: center;
+        }
+
+        .login-container.rtl .login-form label,
+        .login-container.ltr .login-form label {
+          text-align: center;
+        }
+      }
     .login-form {
         background: rgba(10, 10, 10, 0.8);
         backdrop-filter: blur(20px);
@@ -3875,6 +4015,12 @@ function toggleSettingsHistory() {
         font-size: 12px;
         margin-top: 10px;
         text-align: center;
+    }
+    .login-form .field-error {
+        color: #ff6b6b;
+        font-size: 11px;
+        margin-top: 5px;
+        text-align: right;
     }
     .login-links {
         margin-top: 25px;
@@ -5186,6 +5332,12 @@ function toggleSettingsHistory() {
       font-size: 12px;
       margin-top: 10px;
       text-align: center;
+  }
+  .login-form .field-error {
+      color: #ff6b6b;
+      font-size: 11px;
+      margin-top: 5px;
+      text-align: right;
   }
   .login-links {
       margin-top: 25px;

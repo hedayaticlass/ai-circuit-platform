@@ -1,29 +1,71 @@
-{% extends "account/base.html" %}
+{% extends "socialaccount/base.html" %}
 
-{% block head_title %}تأیید ایمیل{% endblock %}
+{% load i18n %}
+{% load account %}
+
+{% block head_title %}{% trans "Confirm E-mail Address" %}{% endblock %}
 
 {% block content %}
-<div style="text-align: center;">
-  <h3 style="color: var(--white-80); margin-bottom: 20px;">تأیید ایمیل</h3>
-
-  {% if confirmation %}
-  <div style="background: rgba(68, 255, 68, 0.1); border: 1px solid rgba(68, 255, 68, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
-    <p style="color: var(--white-80); margin-bottom: 15px;">ایمیل شما تأیید شد! 🎉</p>
-    <p style="color: var(--white-60); font-size: 14px;">حالا می‌توانید وارد سیستم شوید.</p>
-  </div>
-
-  <a href="{% url 'account_login' %}" class="login-button">ورود به سیستم</a>
-
-  {% else %}
-  <div style="background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
-    <p style="color: #ff6b6b; margin-bottom: 15px;">❌ خطا در تأیید ایمیل</p>
-    <p style="color: var(--white-60); font-size: 14px;">لینک تأیید ممکن است منقضی شده یا نامعتبر باشد.</p>
-  </div>
-
-  <div style="display: flex; flex-direction: column; gap: 15px;">
-    <a href="{% url 'account_email_verification_sent' %}" class="login-button">ارسال مجدد ایمیل تأیید</a>
-    <a href="{% url 'account_login' %}" class="login-button">بازگشت به صفحه ورود</a>
-  </div>
-  {% endif %}
+<div class="auth-header">
+    <h1 class="auth-title">{% trans "Confirm E-mail Address" %}</h1>
 </div>
+
+{% if confirmation %}
+    {% user_display confirmation.email_address.user as user_display %}
+    <p class="confirm-message">
+        {% blocktrans with confirmation.email_address.email as email %}Please confirm that <a href="mailto:{{ email }}">{{ email }}</a> is an e-mail address for user {{ user_display }}.{% endblocktrans %}
+    </p>
+
+    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+        {% csrf_token %}
+        <button class="auth-btn" type="submit">{% trans 'Confirm' %}</button>
+    </form>
+{% else %}
+    {% url 'account_email' as email_url %}
+    <div class="confirm-error">
+        <p>{% blocktrans %}This e-mail confirmation link expired or is invalid. Please <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.{% endblocktrans %}</p>
+    </div>
+{% endif %}
+
+<style>
+    .confirm-message {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: rgba(23, 162, 184, 0.1);
+        border: 1px solid rgba(23, 162, 184, 0.2);
+        color: var(--info-color);
+        border-radius: var(--border-radius-md);
+    }
+
+    .confirm-message a {
+        color: var(--primary-color);
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .confirm-message a:hover {
+        text-decoration: underline;
+    }
+
+    .confirm-error {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        color: var(--danger-color);
+        border-radius: var(--border-radius-md);
+    }
+
+    .confirm-error a {
+        color: var(--primary-color);
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .confirm-error a:hover {
+        text-decoration: underline;
+    }
+</style>
 {% endblock %}

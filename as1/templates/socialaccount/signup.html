@@ -7,10 +7,12 @@
 {% block content %}
 <div class="auth-header">
     <h1 class="auth-title">{% trans "Sign Up" %}</h1>
-    <p class="auth-subtitle">{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
+    <p class="auth-subtitle">
+        {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}You are about to use your {{provider_name}} account to login to {{site_name}}. As a final step, please complete the following form:{% endblocktrans %}
+    </p>
 </div>
 
-<form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+<form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
     {% csrf_token %}
 
     {% if form.errors %}
@@ -27,23 +29,13 @@
     {% endif %}
 
     <div class="input-group">
-        <label for="id_username">{% trans "Username" %}:</label>
-        <input type="text" name="username" placeholder="{% trans 'Username' %}" id="id_username" required>
-    </div>
-
-    <div class="input-group">
         <label for="id_email">{% trans "E-mail" %}:</label>
-        <input type="email" name="email" placeholder="{% trans 'E-mail address' %}" id="id_email" required>
+        <input type="email" name="email" placeholder="{% trans 'E-mail address' %}" id="id_email" value="{{ form.email.value }}" required>
     </div>
 
     <div class="input-group">
-        <label for="id_password1">{% trans "Password" %}:</label>
-        <input type="password" name="password1" placeholder="{% trans 'Password' %}" id="id_password1" required>
-    </div>
-
-    <div class="input-group">
-        <label for="id_password2">{% trans "Password (again)" %}:</label>
-        <input type="password" name="password2" placeholder="{% trans 'Password (again)' %}" id="id_password2" required>
+        <label for="id_username">{% trans "Username" %}:</label>
+        <input type="text" name="username" placeholder="{% trans 'Username' %}" id="id_username" value="{{ form.username.value }}" required>
     </div>
 
     {% if redirect_field_value %}
@@ -52,17 +44,6 @@
 
     <button class="auth-btn" type="submit">{% trans "Sign Up" %}</button>
 </form>
-
-{% get_providers as socialaccount_providers %}
-{% if socialaccount_providers %}
-<div class="divider">
-    <span>{% trans "Or sign up with" %}</span>
-</div>
-
-<div class="social-login">
-    {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
-</div>
-{% endif %}
 
 <style>
     .form-errors {
