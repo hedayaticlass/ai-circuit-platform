@@ -1,0 +1,146 @@
+{
+  "summary": {
+    "timestamp": "2026-06-23T16:32:16.514149",
+    "model": "openai/gpt-oss-20b:free",
+    "total_circuits": 5,
+    "metrics": {
+      "cir_generation_rate": 100.0,
+      "topological_validity": 100.0,
+      "spice_generation_rate": 100.0,
+      "simulation_success": 0.0,
+      "avg_latency_ms": 10622
+    }
+  },
+  "results": [
+    {
+      "id": "DC001",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "یک مقاومت ۱ کیلواهم به یک باتری ۵ ولت وصل است",
+      "expected_components": [
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title مقاومت و باتری\nR1 1 0 1k\nV1 1 0 5V\n.end",
+        "sim_attempted": true,
+        "sim_success": false,
+        "sim_error": "cannot load library 'C:\\Users\\filfu\\AppData\\Roaming\\Python\\Python314\\site-packages\\PySpice\\Spice\\NgSpice\\Spice64_dll\\dll-vs\\ngspice.dll': error 0x7e.  Additionally, ctypes.util.find_library() did not ",
+        "component_count": 2,
+        "node_count": 2,
+        "latency_ms": 11434,
+        "error": null
+      }
+    },
+    {
+      "id": "DC002",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "یک مدار با منبع ولتاژ ۱۲ ولت و دو مقاومت ۲ کیلواهمی که به صورت سری وصل شده‌اند",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title سری دو مقاومت با منبع 12V\nV1 3 0 12V\nR1 3 2 2k\nR2 2 0 2k\n.end",
+        "sim_attempted": true,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 11242,
+        "error": null
+      }
+    },
+    {
+      "id": "DC003",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "دو مقاومت ۱ کیلواهم به صورت موازی با یک منبع ۹ ولت",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Parallel resistors with voltage source\nV1 1 0 9V\nR1 1 0 1k\nR2 1 0 1k\n.end",
+        "sim_attempted": true,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 2,
+        "latency_ms": 7469,
+        "error": null
+      }
+    },
+    {
+      "id": "DC004",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "یک LED (دیود) با مقاومت محدودکننده ۴۷۰ اهم و منبع ۵ ولت",
+      "expected_components": [
+        "resistor",
+        "diode",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title LED with 470Ω resistor and 5V source\nV1 1 0 5V\nR1 1 2 470\nD1 2 0 D1N4148\n.model D1N4148 D(Is=2.52n Rs=.568 N=1.752 Cjo=4p M=.4 tt=20n)\n.end",
+        "sim_attempted": true,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 13696,
+        "error": null
+      }
+    },
+    {
+      "id": "DC005",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "سه مقاومت ۱k، ۲k و ۳k کیلواهم به صورت سری با باتری ۱۰ ولت",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title سری مقاومت با باتری\nV1 1 0 10V\nR1 1 2 1k\nR2 2 3 2k\nR3 3 0 3k\n.end",
+        "sim_attempted": true,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 9268,
+        "error": null
+      }
+    }
+  ]
+}

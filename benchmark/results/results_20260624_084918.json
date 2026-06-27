@@ -1,0 +1,1438 @@
+{
+  "summary": {
+    "timestamp": "2026-06-24T08:49:18.591783",
+    "model": "openai/gpt-oss-20b:free",
+    "total_circuits": 51,
+    "metrics": {
+      "cir_generation_rate": 100.0,
+      "topological_validity": 74.5,
+      "spice_generation_rate": 96.1,
+      "simulation_success": 0.0,
+      "avg_latency_ms": 17169
+    }
+  },
+  "results": [
+    {
+      "id": "DC001",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "یک مقاومت ۱ کیلواهم به یک باتری ۵ ولت وصل است",
+      "expected_components": [
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Resistor in series with battery\nR1 1 0 1k\nV1 1 0 5V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "cannot load library 'D:\\Projects\\ai-circuit-platform\\final\\.venv\\Lib\\site-packages\\PySpice\\Spice\\NgSpice\\Spice64_dll\\dll-vs\\ngspice.dll': error 0x7e.  Additionally, ctypes.util.find_library() did not ",
+        "component_count": 2,
+        "node_count": 2,
+        "latency_ms": 10898,
+        "error": null
+      }
+    },
+    {
+      "id": "DC002",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "یک مدار با منبع ولتاژ ۱۲ ولت و دو مقاومت ۲ کیلواهمی که به صورت سری وصل شده‌اند",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title سری دو مقاومت و منبع ولتاژ\nV1 1 0 12V\nR1 1 2 2k\nR2 2 0 2k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 5474,
+        "error": null
+      }
+    },
+    {
+      "id": "DC003",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "دو مقاومت ۱ کیلواهم به صورت موازی با یک منبع ۹ ولت",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Parallel resistors with voltage source\nV1 1 0 9V\nR1 1 0 1k\nR2 1 0 1k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 2,
+        "latency_ms": 6932,
+        "error": null
+      }
+    },
+    {
+      "id": "DC004",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "یک LED (دیود) با مقاومت محدودکننده ۴۷۰ اهم و منبع ۵ ولت",
+      "expected_components": [
+        "resistor",
+        "diode",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title LED with series resistor\nV1 1 0 5V\nR1 1 2 470\nD1 2 0 D1N4148\n.model D1N4148 D(Is=2.52n Rs=.568 N=1.752 Cjo=4p M=.4 tt=20n)\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 13251,
+        "error": null
+      }
+    },
+    {
+      "id": "DC005",
+      "category": "dc_basic",
+      "difficulty": "easy",
+      "description": "سه مقاومت ۱k، ۲k و ۳k کیلواهم به صورت سری با باتری ۱۰ ولت",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title سری مقاومت با باتری\nR1 1 2 1k\nR2 2 3 2k\nR3 3 0 3k\nV1 1 0 10V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 8227,
+        "error": null
+      }
+    },
+    {
+      "id": "DC006",
+      "category": "dc_intermediate",
+      "difficulty": "medium",
+      "description": "یک تقسیم‌کننده ولتاژ با مقاومت‌های ۱۰ کیلواهم و ۱۰ کیلواهم که از باتری ۱۲ ولت تغذیه می‌شود",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Voltage Divider\nV1 1 0 12V\nR1 1 2 10k\nR2 2 0 10k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 12246,
+        "error": null
+      }
+    },
+    {
+      "id": "DC007",
+      "category": "dc_intermediate",
+      "difficulty": "medium",
+      "description": "مدار پل ویتستون با چهار مقاومت ۱k، ۲k، ۳k و ۶k متصل به منبع ۱۰ ولت",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Wheatstone Bridge\nR1 1 3 1k\nR2 3 0 2k\nR3 1 2 3k\nR4 2 0 6k\nV1 1 0 10V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 4,
+        "latency_ms": 20394,
+        "error": null
+      }
+    },
+    {
+      "id": "DC008",
+      "category": "dc_intermediate",
+      "difficulty": "medium",
+      "description": "یک منبع جریان ۲ میلی‌آمپر موازی با مقاومت ۱۰ کیلواهم",
+      "expected_components": [
+        "current_source",
+        "resistor"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Current source in parallel with resistor\nR1 1 0 10k\nI1 1 0 2mA\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 2,
+        "node_count": 2,
+        "latency_ms": 5753,
+        "error": null
+      }
+    },
+    {
+      "id": "DC009",
+      "category": "dc_intermediate",
+      "difficulty": "medium",
+      "description": "دو دیود به صورت سری با مقاومت ۴۷۰ اهم و منبع ۵ ولت",
+      "expected_components": [
+        "diode",
+        "diode",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title دو دیود سری با مقاومت و منبع 5V\nV1 1 0 5V\nR1 1 2 470\nD1 2 3 1N4148\nD2 3 0 1N4148\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 15929,
+        "error": null
+      }
+    },
+    {
+      "id": "DC010",
+      "category": "dc_intermediate",
+      "difficulty": "medium",
+      "description": "یک مدار با منبع ۱۵ ولت، مقاومت ۱ کیلواهم، و دیود زنر ۵.۱ ولت برای تنظیم ولتاژ",
+      "expected_components": [
+        "resistor",
+        "diode",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title مدار تنظیم ولتاژ با دیود زنر\nV1 1 0 15V\nR1 1 2 1k\nD1 2 0 5.1V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 10029,
+        "error": null
+      }
+    },
+    {
+      "id": "RC001",
+      "category": "rc_rl",
+      "difficulty": "easy",
+      "description": "یک فیلتر پایین‌گذر RC با مقاومت ۱ کیلواهم و خازن ۱۰ نانوفاراد",
+      "expected_components": [
+        "resistor",
+        "capacitor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره '1' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title Low-pass RC filter\nR1 1 2 1k\nC1 2 0 10nF\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 2,
+        "node_count": 3,
+        "latency_ms": 8403,
+        "error": null
+      }
+    },
+    {
+      "id": "RC002",
+      "category": "rc_rl",
+      "difficulty": "easy",
+      "description": "یک فیلتر بالاگذر RC با مقاومت ۱۰ کیلواهم و خازن ۱ میکروفاراد متصل به منبع AC",
+      "expected_components": [
+        "resistor",
+        "capacitor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title High-pass RC filter\nV1 1 0 5V\nC1 1 2 1uF\nR1 2 0 10k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 10573,
+        "error": null
+      }
+    },
+    {
+      "id": "RC003",
+      "category": "rc_rl",
+      "difficulty": "medium",
+      "description": "یک فیلتر RLC سری با مقاومت ۱۰۰ اهم، سلف ۱۰ میلی‌هانری و خازن ۱۰۰ نانوفاراد متصل به منبع سینوسی ۵ ولت ۱ کیلوهرتز",
+      "expected_components": [
+        "resistor",
+        "inductor",
+        "capacitor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title RLC series filter\nR1 3 1 100\nL1 1 2 10mH\nC1 2 0 100nF\nV1 3 0 5V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 9470,
+        "error": null
+      }
+    },
+    {
+      "id": "RC004",
+      "category": "rc_rl",
+      "difficulty": "medium",
+      "description": "یک مدار RL با سلف ۱ میلی‌هانری و مقاومت ۵۰ اهم و منبع DC 12 ولت",
+      "expected_components": [
+        "inductor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title RL Circuit\nR1 1 2 50\nL1 2 0 1mH\nV1 1 0 12V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 10304,
+        "error": null
+      }
+    },
+    {
+      "id": "RC005",
+      "category": "rc_rl",
+      "difficulty": "medium",
+      "description": "مدار تانک LC موازی با سلف ۱۰ میلی‌هانری و خازن ۱۰۰ نانوفاراد به همراه مقاومت ۱ کیلواهم موازی و منبع AC",
+      "expected_components": [
+        "inductor",
+        "capacitor",
+        "resistor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "منبع ولتاژ V1 مستقیماً موازی با سلف L1 است. سلف در تحلیل DC مانند یک سیم بدون مقاومت عمل می‌کند، پس این منبع ولتاژ توسط آن اتصال کوتاه می‌شود (خطای حل‌ناپذیر برای SPICE). یک مقاومت کوچک بین این دو المان اضافه کنید یا توپولوژی را اصلاح کنید."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title Parallel LC Tank with Resistor and AC Source\nL1 1 0 10mH\nC1 1 0 100nF\nR1 1 0 1k\nV1 1 0 1V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 2,
+        "latency_ms": 10480,
+        "error": null
+      }
+    },
+    {
+      "id": "BJT001",
+      "category": "bjt",
+      "difficulty": "medium",
+      "description": "یک ترانزیستور NPN 2N2222 در مد اشباع با مقاومت بیس ۱۰ کیلواهم و مقاومت کلکتور ۱ کیلواهم و منبع ۵ ولت",
+      "expected_components": [
+        "bjt_npn",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title NPN Saturation Circuit\nR1 1 2 10k\nR2 1 3 1k\nQ1 3 2 0 2N2222\nV1 1 0 5V\n.model 2N2222 NPN(Bf=255 Vaf=74 Is=14.3f Ise=14.3f Ne=1.31 Ikf=.285 Xtb=1.5 Br=6.1 Nc=2 Isc=0 Ikr=0 Rc=1 Cjc=7.31p Mjc=.342 Vjc=.75 Fc=.5 Cje=22p Mje=.377 Vje=.75 Tf=411p Itf=.6 Vtf=1.7 Xtf=3 Rb=10)\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 17323,
+        "error": null
+      }
+    },
+    {
+      "id": "BJT002",
+      "category": "bjt",
+      "difficulty": "medium",
+      "description": "یک تقویت‌کننده امیتر مشترک با ترانزیستور NPN، مقاومت کلکتور ۵ کیلواهم، مقاومت امیتر ۱ کیلواهم و تغذیه ۱۵ ولت",
+      "expected_components": [
+        "bjt_npn",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Common emitter amplifier\nV1 Vcc 0 15V\nR1 Vcc C 5k\nR2 E 0 1k\nRb Vcc B 10k\nQ1 C B E 2N2222\n.model 2N2222 NPN(Bf=255 Vaf=74 Is=14.3f Ise=14.3f Ne=1.31 Ikf=.285 Xtb=1.5 Br=6.1 Nc=2 Isc=0 Ikr=0 Rc=1 Cjc=7.31p Mjc=.342 Vjc=.75 Fc=.5 Cje=22p Mje=.377 Vje=.75 Tf=411p Itf=.6 Vtf=1.7 Xtf=3 Rb=10)\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 5,
+        "latency_ms": 10385,
+        "error": null
+      }
+    },
+    {
+      "id": "BJT003",
+      "category": "bjt",
+      "difficulty": "hard",
+      "description": "یک تقویت‌کننده کلاس A با ترانزیستور NPN، تقسیم‌کننده ولتاژ بایاس با مقاومت‌های ۴۷k و ۱۰k، مقاومت کلکتور ۲.۲k و امیتر ۱k و تغذیه ۱۵ ولت",
+      "expected_components": [
+        "bjt_npn",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Class A Amplifier\nR1 Vcc Vb 47k\nR2 Vb 0 10k\nRc Vcc C 2.2k\nRe E 0 1k\nV1 Vcc 0 15V\nQ1 C Vb E 2N2222\n.model 2N2222 NPN(Bf=255 Vaf=74 Is=14.3f Ise=14.3f Ne=1.31 Ikf=.285 Xtb=1.5 Br=6.1 Nc=2 Isc=0 Ikr=0 Rc=1 Cjc=7.31p Mjc=.342 Vjc=.75 Fc=.5 Cje=22p Mje=.377 Vje=.75 Tf=411p Itf=.6 Vtf=1.7 Xtf=3 Rb=10)\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 6,
+        "node_count": 5,
+        "latency_ms": 12015,
+        "error": null
+      }
+    },
+    {
+      "id": "BJT004",
+      "category": "bjt",
+      "difficulty": "hard",
+      "description": "یک جفت دارلینگتون NPN با مقاومت بیس ۱۰۰ کیلواهم و بار ۱۰۰ اهم و منبع ۱۲ ولت",
+      "expected_components": [
+        "bjt_npn",
+        "bjt_npn",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Darlington NPN pair with 100k base resistor and 100Ω load\nR1 Vcc B1 100k\nR2 Vcc C1 100\nQ1 C1 B1 E1 NPN\nQ2 Vcc E1 0 NPN\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 5,
+        "latency_ms": 19169,
+        "error": null
+      }
+    },
+    {
+      "id": "BJT005",
+      "category": "bjt",
+      "difficulty": "medium",
+      "description": "یک تقویت‌کننده بیس مشترک با ترانزیستور PNP، مقاومت امیتر ۱k و کلکتور ۵k و تغذیه منفی ۱۲ ولت",
+      "expected_components": [
+        "bjt_pnp",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Common-Base PNP Amplifier\nR1 E 0 1k\nR2 C Vee 5k\nV1 Vee 0 -12V\nQ1 C 0 E PNP\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 15768,
+        "error": null
+      }
+    },
+    {
+      "id": "MOS001",
+      "category": "mosfet",
+      "difficulty": "medium",
+      "description": "یک کلید MOSFET کانال N با مقاومت گیت ۱۰ کیلواهم و بار ۴۷۰ اهم و تغذیه ۵ ولت",
+      "expected_components": [
+        "mosfet_n",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title MOSFET N-channel Switch with 10kΩ Gate Resistor and 470Ω Load\nM1 D G S S N-channel\nR1 G S 10k\nR2 D Vcc 470\nV1 Vcc 0 5V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 5,
+        "latency_ms": 20162,
+        "error": null
+      }
+    },
+    {
+      "id": "MOS002",
+      "category": "mosfet",
+      "difficulty": "hard",
+      "description": "یک درایور تکمیلی CMOS با MOSFET کانال N و P متصل به هم، تغذیه ۵ ولت و بار ۱ کیلواهم",
+      "expected_components": [
+        "mosfet_n",
+        "mosfet_p",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title CMOS Driver\nV1 Vcc 0 5V\nR1 OUT Vcc 1k\nM1 Vcc IN OUT OUT 1N\nM2 OUT IN 0 0 1N\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 112417,
+        "error": null
+      }
+    },
+    {
+      "id": "MOS003",
+      "category": "mosfet",
+      "difficulty": "hard",
+      "description": "یک تقویت‌کننده سورس مشترک با MOSFET کانال N، مقاومت drain 10 کیلواهم، مقاومت source 1 کیلواهم و تغذیه ۱۵ ولت",
+      "expected_components": [
+        "mosfet_n",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Common Source Amplifier\nV1 Vdd 0 15V\nR1 Vdd D 10k\nR2 S 0 1k\nM1 D Vdd S S N-channel\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 17393,
+        "error": null
+      }
+    },
+    {
+      "id": "RECT001",
+      "category": "rectifier",
+      "difficulty": "medium",
+      "description": "یک یکسوساز نیم‌موج با دیود 1N4007 و مقاومت بار ۱ کیلواهم متصل به منبع AC 12 ولت ۵۰ هرتز",
+      "expected_components": [
+        "diode",
+        "resistor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Half-wave rectifier\nV1 1 0 12V\nD1 1 2 1N4007\nR1 2 0 1k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 11899,
+        "error": null
+      }
+    },
+    {
+      "id": "RECT002",
+      "category": "rectifier",
+      "difficulty": "hard",
+      "description": "یک یکسوساز تمام‌موج با چهار دیود 1N4007 در آرایش پل و مقاومت بار ۱ کیلواهم و خازن صافی ۱۰۰ میکروفاراد متصل به منبع AC 12 ولت ۵۰ هرتز",
+      "expected_components": [
+        "diode",
+        "diode",
+        "diode",
+        "diode",
+        "capacitor",
+        "resistor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Full-wave bridge rectifier with 1k load and 100uF smoothing\nV1 1 2 12V\nD1 1 3 1N4007\nD2 3 2 1N4007\nD3 2 0 1N4007\nD4 0 1 1N4007\nR1 3 0 1k\nC1 3 0 100uF\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 7,
+        "node_count": 4,
+        "latency_ms": 12681,
+        "error": null
+      }
+    },
+    {
+      "id": "RECT003",
+      "category": "rectifier",
+      "difficulty": "medium",
+      "description": "یک یکسوساز با دیود و خازن صافی ۴۷۰ میکروفاراد و مقاومت بار ۱ کیلواهم و منبع AC 9 ولت",
+      "expected_components": [
+        "diode",
+        "capacitor",
+        "resistor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Rectifier with diode and 470uF capacitor, 1k load, 9V AC source\nV1 1 0 9V\nD1 1 2 1N4001\nC1 2 0 470uF\nR1 2 0 1k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 3,
+        "latency_ms": 10405,
+        "error": null
+      }
+    },
+    {
+      "id": "OSC001",
+      "category": "oscillator",
+      "difficulty": "hard",
+      "description": "یک نوسانگر RC با سه مرحله RC هر کدام با مقاومت ۱۰ کیلواهم و خازن ۱۰ نانوفاراد",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "resistor",
+        "capacitor",
+        "capacitor",
+        "capacitor"
+      ],
+      "expected_node_count": 6,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره '1' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title RC Oscillator with 3 stages\nR1 1 2 10k\nC1 2 0 10nF\nR2 2 3 10k\nC2 3 0 10nF\nR3 3 4 10k\nC3 4 0 10nF\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 6,
+        "node_count": 5,
+        "latency_ms": 22704,
+        "error": null
+      }
+    },
+    {
+      "id": "OSC002",
+      "category": "oscillator",
+      "difficulty": "hard",
+      "description": "یک مدار Colpitts با سلف ۱۰ میلی‌هانری و دو خازن ۱۰۰ پیکوفاراد و ۴۷ پیکوفاراد و مقاومت ۱ کیلواهم",
+      "expected_components": [
+        "inductor",
+        "capacitor",
+        "capacitor",
+        "resistor"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Colpitts oscillator\nL1 1 2 10mH\nC1 1 0 100pF\nC2 2 0 47pF\nR1 1 0 1k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 3,
+        "latency_ms": 14861,
+        "error": null
+      }
+    },
+    {
+      "id": "POWER001",
+      "category": "power",
+      "difficulty": "medium",
+      "description": "یک تنظیم‌کننده ولتاژ خطی با دیود زنر ۵ ولت و مقاومت سری ۴۷۰ اهم و منبع ۱۲ ولت و بار ۱ کیلواهم",
+      "expected_components": [
+        "diode",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Linear voltage regulator with 5V Zener\nV1 1 0 12V\nR1 1 2 470\nD1 2 0 5V\nR2 2 0 1k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 3,
+        "latency_ms": 20567,
+        "error": null
+      }
+    },
+    {
+      "id": "POWER002",
+      "category": "power",
+      "difficulty": "hard",
+      "description": "یک تنظیم‌کننده ولتاژ با ترانزیستور پاس NPN، دیود زنر مرجع، مقاومت بایاس و بار خروجی متصل به تغذیه ۱۵ ولت",
+      "expected_components": [
+        "bjt_npn",
+        "diode",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Voltage Regulator with NPN Pass Transistor\nV1 V+ 0 15V\nR1 V+ Vz 1k\nD1 Vz 0 5.1V\nQ1 V+ Vz Vout 2N2222\nR2 Vout 0 10k\n.model 2N2222 NPN(Bf=255 Vaf=74 Is=14.3f Ise=14.3f Ne=1.31 Ikf=.285 Xtb=1.5 Br=6.1 Nc=2 Isc=0 Ikr=0 Rc=1 Cjc=7.31p Mjc=.342 Vjc=.75 Fc=.5 Cje=22p Mje=.377 Vje=.75 Tf=411p Itf=.6 Vtf=1.7 Xtf=3 Rb=10)\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 4,
+        "latency_ms": 17478,
+        "error": null
+      }
+    },
+    {
+      "id": "AMP001",
+      "category": "amplifier",
+      "difficulty": "medium",
+      "description": "یک تقویت‌کننده با op-amp در پیکربندی غیر معکوس با مقاومت‌های ۱۰ کیلواهم و ۱ کیلواهم و تغذیه دوقطبی ۱۵ ولت",
+      "expected_components": [
+        "opamp",
+        "resistor",
+        "resistor",
+        "voltage_source",
+        "voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره 'in' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title Non-Inverting Op-Amp Amplifier\nR1 out in_neg 10k\nR2 in_neg 0 1k\nV1 V1 0 15V\nV2 V2 0 -15V\nXU1 out in in_neg V1 V2 opamp\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 6,
+        "latency_ms": 28528,
+        "error": null
+      }
+    },
+    {
+      "id": "AMP002",
+      "category": "amplifier",
+      "difficulty": "medium",
+      "description": "یک تقویت‌کننده معکوس با op-amp با مقاومت ورودی ۱ کیلواهم و مقاومت بازخورد ۱۰ کیلواهم",
+      "expected_components": [
+        "opamp",
+        "resistor",
+        "resistor",
+        "voltage_source",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره '1' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره 'VCC' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره 'VEE' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": false,
+        "spice_text": null,
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": null,
+        "component_count": 4,
+        "node_count": 6,
+        "latency_ms": 27218,
+        "error": "SPICE conversion failed: نوع المان 'ground' در حال حاضر برای تبدیل به SPICE پشتیبانی نمی‌شود."
+      }
+    },
+    {
+      "id": "AMP003",
+      "category": "amplifier",
+      "difficulty": "hard",
+      "description": "یک جمع‌کننده ولتاژ با op-amp با سه ورودی از طریق مقاومت‌های ۱۰ کیلواهم و مقاومت بازخورد ۱۰ کیلواهم",
+      "expected_components": [
+        "opamp",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره '1' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره '2' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره '3' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره 'VCC' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره 'VEE' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title Summing Amplifier with 3 inputs\nR1 1 4 10k\nR2 2 4 10k\nR3 3 4 10k\nR4 5 4 10k\nXU1 5 0 4 VCC VEE 15V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 8,
+        "latency_ms": 17598,
+        "error": null
+      }
+    },
+    {
+      "id": "FILTER001",
+      "category": "filter",
+      "difficulty": "hard",
+      "description": "یک فیلتر پایین‌گذر مرتبه دوم Butterworth با دو مرحله RC و op-amp بافر با فرکانس قطع ۱ کیلوهرتز",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "capacitor",
+        "capacitor",
+        "opamp",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره '1' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره '4' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title 2nd Order Butterworth Low-Pass Filter with RC stages and Op-Amp Buffer\nR1 1 2 10k\nC1 2 0 16nF\nR2 2 3 10k\nC2 3 0 16nF\nXU1 3 3 3 4 0 741\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 5,
+        "latency_ms": 19629,
+        "error": null
+      }
+    },
+    {
+      "id": "FILTER002",
+      "category": "filter",
+      "difficulty": "medium",
+      "description": "یک فیلتر میان‌گذر RLC سری با مقاومت ۱۰۰ اهم، سلف ۱۰ میلی‌هانری و خازن ۱ میکروفاراد متصل به منبع AC 1 ولت",
+      "expected_components": [
+        "resistor",
+        "inductor",
+        "capacitor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title RLC Series Filter\nR1 1 2 100\nL1 2 3 10mH\nC1 3 0 1uF\nV1 1 0 1V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 8803,
+        "error": null
+      }
+    },
+    {
+      "id": "SENS001",
+      "category": "sensor",
+      "difficulty": "medium",
+      "description": "یک مدار تقسیم‌کننده ولتاژ با ترمیستور ۱۰ کیلواهم و مقاومت ثابت ۱۰ کیلواهم و منبع ۵ ولت برای خواندن دما",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Voltage Divider Thermistor\nV1 1 0 5V\nR1 1 2 10k\nR2 2 0 10k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 14633,
+        "error": null
+      }
+    },
+    {
+      "id": "SENS002",
+      "category": "sensor",
+      "difficulty": "hard",
+      "description": "یک مدار تقویت‌کننده برای ترموکوپل با op-amp، مقاومت‌های بهره ۱۰۰ کیلواهم و ۱ کیلواهم و منبع ۵ ولت",
+      "expected_components": [
+        "opamp",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره 'in' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": false,
+        "spice_text": null,
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": null,
+        "component_count": 5,
+        "node_count": 5,
+        "latency_ms": 29621,
+        "error": "SPICE conversion failed: نوع المان 'ground' در حال حاضر برای تبدیل به SPICE پشتیبانی نمی‌شود."
+      }
+    },
+    {
+      "id": "MIXED001",
+      "category": "mixed",
+      "difficulty": "hard",
+      "description": "یک مدار کنترل LED با ترانزیستور NPN 2N2222، مقاومت بیس ۱ کیلواهم، مقاومت محدودکننده LED 470 اهم و تغذیه ۵ ولت",
+      "expected_components": [
+        "bjt_npn",
+        "diode",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره 'E' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title LED Control Circuit\nV1 Vcc 0 5V\nR1 Vcc B 1k\nR2 Vcc LED 470\nD1 LED C 2V\nQ1 C B E 2N2222\n.model 2N2222 NPN(Bf=255 Vaf=74 Is=14.3f Ise=14.3f Ne=1.31 Ikf=.285 Xtb=1.5 Br=6.1 Nc=2 Isc=0 Ikr=0 Rc=1 Cjc=7.31p Mjc=.342 Vjc=.75 Fc=.5 Cje=22p Mje=.377 Vje=.75 Tf=411p Itf=.6 Vtf=1.7 Xtf=3 Rb=10)\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 6,
+        "latency_ms": 21236,
+        "error": null
+      }
+    },
+    {
+      "id": "MIXED002",
+      "category": "mixed",
+      "difficulty": "hard",
+      "description": "یک مدار تشخیص آستانه با op-amp کمپاراتور، تقسیم‌کننده ولتاژ برای آستانه و ورودی سنسور، منبع ۱۲ ولت",
+      "expected_components": [
+        "opamp",
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره 'OUT' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title Threshold detection comparator circuit\nV1 Vcc 0 12V\nV2 SENSOR 0 5V\nR1 Vcc THRESH 10k\nR2 THRESH 0 10k\nXU1 OUT THRESH SENSOR Vcc 0 LM393\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 5,
+        "latency_ms": 19074,
+        "error": null
+      }
+    },
+    {
+      "id": "MIXED003",
+      "category": "mixed",
+      "difficulty": "hard",
+      "description": "یک آمپلی‌فایر اینسترومنتیشن ساده با سه op-amp و هفت مقاومت برای تقویت سیگنال دیفرانسیل با بهره ۱۰۰",
+      "expected_components": [
+        "opamp",
+        "opamp",
+        "opamp",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 8,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره 'IN_A' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد.",
+          "گره 'IN_B' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title Instrumentation Amplifier Gain 100\nR1 N1 N4 1k\nR2 N1 0 1k\nR3 N4 0 1k\nR4 N8 N1 1k\nR5 N9 N4 1k\nR6 OUT 0 1k\nR7 N8 N9 1k\nXU1 N1 IN_A N1 VCC 0 LM741\nXU2 N4 IN_B N4 VCC 0 LM741\nXU3 OUT N8 N9 VCC 0 LM741\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 10,
+        "node_count": 9,
+        "latency_ms": 63548,
+        "error": null
+      }
+    },
+    {
+      "id": "AC001",
+      "category": "ac_analysis",
+      "difficulty": "medium",
+      "description": "یک تقسیم‌کننده ولتاژ AC با دو خازن ۱ میکروفاراد و ۱۰ میکروفاراد و منبع سینوسی ۱۰ ولت ۱ کیلوهرتز",
+      "expected_components": [
+        "capacitor",
+        "capacitor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title AC Voltage Divider with Capacitors\nV1 1 0 10V\nC1 1 2 1uF\nC2 2 0 10uF\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 12692,
+        "error": null
+      }
+    },
+    {
+      "id": "AC002",
+      "category": "ac_analysis",
+      "difficulty": "medium",
+      "description": "یک مدار ضریب کیفیت بالا با سلف ۱۰۰ میلی‌هانری، خازن ۱۰ نانوفاراد و مقاومت ۱۰ اهم و منبع AC",
+      "expected_components": [
+        "inductor",
+        "capacitor",
+        "resistor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title High Q Series RLC Circuit\nV1 1 0 5V\nL1 1 2 100mH\nC1 2 3 10nF\nR1 3 0 10Ω\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 16492,
+        "error": null
+      }
+    },
+    {
+      "id": "AC003",
+      "category": "ac_analysis",
+      "difficulty": "hard",
+      "description": "یک فیلتر notch (band-reject) با مدار twin-T شامل دو مقاومت ۱۰ کیلواهم، یک مقاومت ۵ کیلواهم، دو خازن ۱۰ نانوفاراد و یک خازن ۲۰ نانوفاراد",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "resistor",
+        "capacitor",
+        "capacitor",
+        "capacitor",
+        "ac_voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Twin-T Notch Filter\nR1 1 2 10k\nR2 2 3 10k\nR3 3 4 5k\nC1 2 0 10nF\nC2 1 3 20nF\nC3 4 0 10nF\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 6,
+        "node_count": 5,
+        "latency_ms": 14570,
+        "error": null
+      }
+    },
+    {
+      "id": "MULTI001",
+      "category": "multilang",
+      "difficulty": "easy",
+      "description": "A simple RC low-pass filter with a 10k resistor and 100nF capacitor connected to a 5V DC source",
+      "expected_components": [
+        "resistor",
+        "capacitor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title RC low-pass filter\nV1 1 0 5V\nR1 1 2 10k\nC1 2 0 100nF\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 10839,
+        "error": null
+      }
+    },
+    {
+      "id": "MULTI002",
+      "category": "multilang",
+      "difficulty": "medium",
+      "description": "Connect a 2N3904 NPN transistor in common emitter configuration with a 10k base resistor, 1k collector resistor, and 5V supply",
+      "expected_components": [
+        "bjt_npn",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 4,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title 2N3904 Common Emitter Amplifier\nV1 1 0 5V\nR1 1 3 10k\nR2 1 2 1k\nQ1 2 3 0 2N3904\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 4,
+        "node_count": 4,
+        "latency_ms": 9424,
+        "error": null
+      }
+    },
+    {
+      "id": "MULTI003",
+      "category": "multilang",
+      "difficulty": "easy",
+      "description": "یک مدار RC ساده با مقاومت ۴۷۰ اهم و خازن ۱۰۰ میکروفاراد متصل به ۹ ولت",
+      "expected_components": [
+        "resistor",
+        "capacitor",
+        "voltage_source"
+      ],
+      "expected_node_count": 3,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title مدار RC ساده\nV1 1 0 9V\nR1 1 2 470\nC1 2 0 100uF\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 3,
+        "node_count": 3,
+        "latency_ms": 11964,
+        "error": null
+      }
+    },
+    {
+      "id": "EDGE001",
+      "category": "edge_cases",
+      "difficulty": "easy",
+      "description": "فقط یک مقاومت ۱ کیلواهم",
+      "expected_components": [
+        "resistor"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره '1' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title یک مقاومت\nR1 1 0 1k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 1,
+        "node_count": 2,
+        "latency_ms": 4226,
+        "error": null
+      }
+    },
+    {
+      "id": "EDGE002",
+      "category": "edge_cases",
+      "difficulty": "easy",
+      "description": "یک باتری ۹ ولت بدون هیچ بار",
+      "expected_components": [
+        "voltage_source"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": false,
+        "topo_warnings": [
+          "گره '1' فقط به یک پایه وصل است (مسیر بسته‌ای برای جریان وجود ندارد). هر گره باید حداقل به دو پایه از دو المان مختلف (یا یک حلقه‌ی کامل تا زمین) وصل باشد."
+        ],
+        "spice_generated": true,
+        "spice_text": ".title 9V Battery\nV1 1 0 9V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 1,
+        "node_count": 2,
+        "latency_ms": 6408,
+        "error": null
+      }
+    },
+    {
+      "id": "EDGE003",
+      "category": "edge_cases",
+      "difficulty": "medium",
+      "description": "یک مدار با مقاومت بسیار بزرگ یک مگااهم و باتری ۱.۵ ولت",
+      "expected_components": [
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 2,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title Simple 1MΩ resistor with 1.5V battery\nR1 1 0 1M\nV1 1 0 1.5V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 2,
+        "node_count": 2,
+        "latency_ms": 6835,
+        "error": null
+      }
+    },
+    {
+      "id": "EDGE004",
+      "category": "edge_cases",
+      "difficulty": "medium",
+      "description": "چهار مقاومت یکسان ۱ کیلواهمی به صورت ستاره (Y) متصل به یک گره مرکزی با منبع ۵ ولت",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 5,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title چار مقاومت ستاره ۱k و منبع ۵V\nV1 1 0 5V\nR1 1 0 1k\nR2 1 0 1k\nR3 1 0 1k\nR4 1 0 1k\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 5,
+        "node_count": 2,
+        "latency_ms": 19037,
+        "error": null
+      }
+    },
+    {
+      "id": "EDGE005",
+      "category": "edge_cases",
+      "difficulty": "hard",
+      "description": "یک مدار با ۱۰ مقاومت یکسان ۱ کیلواهمی به صورت سری با منبع ۱۰ ولت — هر یک ۱ ولت افت دارد",
+      "expected_components": [
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "resistor",
+        "voltage_source"
+      ],
+      "expected_node_count": 11,
+      "pipeline": {
+        "cir_generated": true,
+        "cir_valid": true,
+        "topo_warnings": [],
+        "spice_generated": true,
+        "spice_text": ".title سری 10 مقاومت 1k و منبع 10V\nR1 1 0 1k\nR2 2 1 1k\nR3 3 2 1k\nR4 4 3 1k\nR5 5 4 1k\nR6 6 5 1k\nR7 7 6 1k\nR8 8 7 1k\nR9 9 8 1k\nR10 10 9 1k\nV1 10 0 10V\n.end",
+        "sim_attempted": false,
+        "sim_success": false,
+        "sim_error": "<cdef source string>:7: duplicate declaration of struct ngcomplex",
+        "component_count": 11,
+        "node_count": 11,
+        "latency_ms": 19644,
+        "error": null
+      }
+    }
+  ]
+}

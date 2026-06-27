@@ -1,0 +1,9 @@
+[project]
+name = "ai-circuit-platform"
+version = "0.1.0"
+description = "پلتفرم متن‌باز طراحی، تحلیل و آموزش مدارهای الکتریکی/الکترونیکی با هوش مصنوعی"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
