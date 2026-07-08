@@ -37,21 +37,26 @@ tests/           pytest برای بخش‌های دترمینیستیک (بدو�
 - Deploy: Docker Compose (دو سرویس: api + frontend)
 
 ## وضعیت فعلی (چه چیزی کار می‌کند)
-- تبدیل توضیح متنی فارسی → CIR با AI ✅
-- تبدیل CIR → نت‌لیست SPICE (دترمینیستیک) ✅
+- تبدیل توضیح متنی فارسی → CIR با AI، با auto-retry بر اساس بازخورد
+  validation (حداکثر ۳ تلاش) ✅ (`services/text_to_cir/openai_text_to_cir.py`)
+- تبدیل CIR → نت‌لیست SPICE (دترمینیستیک)، با کتابخانه‌ی گسترش‌یافته‌ی
+  مدل‌ها (دیود/BJT/MOSFET رایج) و سنتز دینامیک مدل دیود زنر از روی
+  ولتاژ شکست ✅ (`services/cir_to_spice/basic_converter.py`)
 - تبدیل SPICE → CIR (پارسر معکوس) ✅
 - رسم شماتیک سمت backend با schemdraw ✅
 - ویرایشگر بصری React (drag/drop، اتصال دستی پایه‌ها، چت AI) ✅ متصل به backend
 - چیدمان خودکار (auto-layout) مدارهای تولیدشده توسط AI با الگوریتم لایه‌ای ساده (BFS-based) ✅
 - تحلیل DC operating point با PySpice/ngspice ✅ (نیاز به نصب باینری ngspice)
+- شبیه‌سازی transient (`/api/simulate`) ✅ (`services/spice_analyzer/transient_analyzer.py`)
+- «عامل بهبود مدار» (دستور طبیعی مثل «ولتاژ گره ۲ را بیشتر کن») پیاده‌سازی
+  شده ✅ (`services/text_to_cir/llm_circuit_improver.py`, endpoint `/api/improve`)
 
 ## محدودیت‌های شناخته‌شده (عمدی، برای فازهای بعد)
 - فقط ۵ نوع المان دوپایه در UI پشتیبانی می‌شود: مقاومت، خازن، سلف، دیود، منبع
   ولتاژ. ترانزیستور/opamp/IC در CIR قابل تعریف‌اند اما UI سمبل ندارد.
 - هر پیام چت کل مدار را جایگزین می‌کند، نه merge.
-- «عامل بهبود مدار» (مثلاً «نویز را کم کن») فقط interface‌اش تعریف شده
-  (`core/interfaces/circuit_improver.py`)، پیاده‌سازی نشده.
-- آنالیز فقط DC operating point است؛ AC/Transient هنوز نیست.
+- مدل op-amp رفتاری ساده‌شده است (۳-پایه، بدون vcc/vee، بدون slew rate)؛
+  برای آموزش مدارهای پایه کافی است ولی رفتار غیرخطی پیشرفته را مدل نمی‌کند.
 - بدون authentication/چندکاربره (پروژه تک‌کاربره فعلاً است).
 
 ## چیزی که از بازبین می‌خواهیم
