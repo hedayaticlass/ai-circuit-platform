@@ -1,153 +1,295 @@
-# AI Circuit Platform
+# CircuPilot
 
-پلتفرم متن‌باز طراحی، تحلیل و آموزش مدارهای الکتریکی/الکترونیکی با کمک هوش
-مصنوعی. این نسخه بدون Django است و بر اساس یک **Circuit Intermediate
-Representation (CIR)** مشترک ساخته شده که Backend و Frontend از طریق آن با
-هم صحبت می‌کنند.
+> AI-Powered Electronic Circuit Design, Simulation, and Education Platform
 
-## ساختار پروژه
+CircuPilot is an AI-assisted electronic circuit design platform that combines Large Language Models (LLMs), a unified Circuit Intermediate Representation (CIR), SPICE netlist generation, schematic visualization, and circuit simulation.
 
-```
-ai-circuit-platform/
-├── core/                   # کتابخانه مشترک — قلب پروژه
-│   ├── cir/                 # تعریف CIR (Circuit, Component, ComponentType)
-│   ├── interfaces/          # کلاس‌های Abstract برای هر نوع ماژول
-│   └── llm/                  # کلاینت LLM + پرامپت‌ها (فایل‌های جدا از کد)
-├── services/                # پیاده‌سازی‌های concrete
-│   ├── text_to_cir/          # متن -> CIR (با AI)
-│   ├── cir_to_spice/          # CIR <-> SPICE (دترمینیستیک)
-│   └── schematic/             # CIR -> تصویر شماتیک
-├── api/
-│   └── main.py                # FastAPI app
-├── frontend/                # ویرایشگر شماتیک + چت هوشمند (React + Vite)
-│   └── src/
-│       ├── CircuitBuilder.jsx  # رابط کاربری اصلی
-│       └── lib/
-│           ├── cir.js            # adapter: مدل UI <-> CIR
-│           └── api.js            # کلاینت backend
-└── tests/                   # تست‌های pytest (بخش‌های دترمینیستیک)
-```
+This repository contains the **research prototype** developed for the academic version of the project.
 
-## پیش‌نیازها
-
-- Python 3.11+
-- Node.js 20+
-- یک API key سازگار با OpenAI (مثلاً از [OpenRouter](https://openrouter.ai))
+The production version is under active private development and includes many additional features beyond this repository.
 
 ---
 
-## روش ۱: اجرا با Docker (پیشنهادی)
+## 🌐 Live Demo
+
+**Website**
+
+https://circupilot.com
+
+---
+
+## Project Status
+
+🟡 **Research Prototype**
+
+This public repository represents the original research prototype used during the early development of CircuPilot and referenced by our research work.
+
+The production platform is being actively developed in a private repository and currently includes features such as:
+
+- User authentication
+- Cloud deployment
+- AI conversation history
+- Circuit save/load
+- Administration dashboard
+- Usage analytics
+- Rate limiting
+- Continuous deployment
+- Many architectural improvements
+
+---
+
+## Key Features
+
+- AI-assisted circuit generation from natural language
+- Unified Circuit Intermediate Representation (CIR)
+- Automatic SPICE netlist generation
+- Schematic visualization
+- Circuit simulation using PySpice / ngspice
+- React-based circuit editor
+- FastAPI backend
+- Docker deployment
+
+---
+
+# Project Architecture
+
+```
+ai-circuit-platform/
+├── core/
+│   ├── cir/
+│   ├── interfaces/
+│   └── llm/
+│
+├── services/
+│   ├── text_to_cir/
+│   ├── cir_to_spice/
+│   └── schematic/
+│
+├── api/
+│   └── main.py
+│
+├── frontend/
+│   └── src/
+│       ├── CircuitBuilder.jsx
+│       └── lib/
+│           ├── cir.js
+│           └── api.js
+│
+└── tests/
+```
+
+---
+
+# Screenshots
+
+*(Screenshots of the latest CircuPilot interface will be added soon.)*
+
+---
+
+# Installation
+
+## Option 1 — Docker (Recommended)
 
 ```bash
 cp .env.example .env
-# مقدار LLM_API_KEY را در .env تنظیم کنید
+
+# Configure your LLM_API_KEY
 
 docker compose up --build
 ```
 
-- Backend: http://localhost:8000/docs
-- Frontend: http://localhost:5173
+Backend:
+
+```
+http://localhost:8000/docs
+```
+
+Frontend:
+
+```
+http://localhost:5173
+```
 
 ---
 
-## روش ۲: اجرای محلی (بدون Docker)
+## Option 2 — Local Installation
 
-### ۱. Backend
+### Backend
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate        # ویندوز: .venv\Scripts\activate
+
+source .venv/bin/activate
+# Windows
+.venv\Scripts\activate
 
 pip install -r requirements.txt
 
 cp .env.example .env
-# LLM_API_KEY, LLM_BASE_URL, LLM_MODEL را در .env تنظیم کنید
 
 uvicorn api.main:app --reload
 ```
 
-تست بخش‌های دترمینیستیک (بدون نیاز به API key):
+Run deterministic tests:
+
 ```bash
 pytest
 ```
 
-### ۲. Frontend
+---
 
-در یک ترمینال جدید:
+### Frontend
 
 ```bash
 cd frontend
+
 npm install
 
 cp .env.example .env
-# در صورت نیاز VITE_API_BASE_URL را تغییر دهید (پیش‌فرض: http://localhost:8000)
 
 npm run dev
 ```
 
-سپس مرورگر را باز کنید: **http://localhost:5173**
+Open:
+
+```
+http://localhost:5173
+```
 
 ---
 
-## نحوه کار
+# Workflow
 
-۱. در پنل «دستیار هوشمند» (سمت راست)، مدار خود را به فارسی توضیح دهید — مثلاً:
-> یک فیلتر پایین‌گذر RLC با منبع ولتاژ ۵ ولت
+1. The user describes a circuit in natural language.
 
-۲. درخواست به `/api/text-to-cir` ارسال می‌شود؛ مدل AI یک CIR معتبر برمی‌گرداند.
+Example:
 
-۳. Frontend با استفاده از `cirToUiModel` (در `frontend/src/lib/cir.js`) این CIR
-را به مدل داخلی ویرایشگر تبدیل و روی کانواس رسم می‌کند.
+> Design a 5V RLC low-pass filter.
 
-۴. هر بار که مدار را (به‌صورت دستی یا با AI) تغییر دهید، Frontend با
-`uiModelToCIR` آن را به CIR تبدیل کرده و برای تولید نت‌لیست به
-`/api/cir-to-spice` می‌فرستد — نتلیست در پنل پایین (Netlist) نمایش داده می‌شود.
+2. The request is sent to:
 
-## محدودیت‌های فعلی (نسخه اول adapter)
+```
+/api/text-to-cir
+```
 
-- ویرایشگر فعلی فقط از المان‌های دوپایه پشتیبانی می‌کند: مقاومت، خازن، سلف،
-  دیود، منبع ولتاژ. اگر AI مداری با ترانزیستور/opamp/IC تولید کند، آن المان
-  نادیده گرفته می‌شود و هشدار در چت نمایش داده می‌شود.
-- هر پیام جدید در چت، **کل مدار را از نو می‌سازد** (جایگزین می‌کند)، نه اضافه
-  می‌کند. ویژگی «این مدار را بهبود بده» (با حفظ مدار فعلی) در فاز بعدی
-  (Circuit Improver agent) اضافه می‌شود.
-- چیدمان (layout) مدارهای تولیدشده توسط AI ساده و خطی است؛ برای مدارهای
-  پیچیده ممکن است سیم‌ها روی هم بیفتند — قطعات قابل drag-and-drop هستند.
+3. The AI generates a valid CIR.
 
-## تحلیل مدار با PySpice/ngspice
+4. The frontend converts CIR into its internal UI model.
 
-دکمه «تحلیل مدار» در بالای صفحه، آنالیز DC operating point (ولتاژ هر گره و
-جریان شاخه‌ها) را از طریق `/api/analyze` اجرا می‌کند.
+5. The editor renders the schematic.
 
-⚠️ **نکته مهم:** PySpice برای اجرای واقعی شبیه‌سازی به باینری **ngspice**
-نیاز دارد (نه فقط پکیج pip).
+6. Any circuit modification is converted back into CIR.
 
-- **با Docker:** از قبل در `Dockerfile` نصب شده؛ کاری لازم نیست.
-- **اجرای محلی (بدون Docker) روی ویندوز:** باید ngspice را جداگانه نصب کنید:
-  از https://ngspice.sourceforge.io دانلود کنید، یا با conda:
-  ```cmd
-  conda install -c conda-forge ngspice
-  ```
-  اگر ngspice نصب نباشد، دکمه «تحلیل مدار» خطای واضحی نمایش می‌دهد (نه crash).
+7. CIR is converted into a SPICE netlist through:
 
-## نقشه راه
+```
+/api/cir-to-spice
+```
 
-- ~~`services/spice_analyzer/` — تحلیل‌گر PySpice~~ ✅ انجام شد (DC operating point)
-- `core/interfaces/circuit_improver.py` (interface تعریف شده، پیاده‌سازی باقی‌مانده) —
-  عامل AI برای بهبود مدار بر اساس هدف کاربر (مثلاً کاهش نویز)
-- پشتیبانی از ترانزیستور/opamp در adapter و سمبل‌های UI
-- آنالیزهای AC/Transient (علاوه بر DC operating point فعلی)
-- ماژول‌های audio_to_cir، image_to_cir، آزمایشگاه IoT آنلاین
+8. The generated netlist is displayed to the user.
 
-## نکات برای توسعه‌دهندگان (دانشجویان)
+---
 
-اگر نوع المان جدیدی اضافه می‌کنید، این فایل‌ها باید هماهنگ به‌روزرسانی شوند:
+# Circuit Simulation
 
-| لایه | فایل |
-|---|---|
-| تعریف نوع در CIR | `core/cir/schema.py`, `core/cir/pin_order.py` |
-| تولید SPICE | `services/cir_to_spice/basic_converter.py` |
-| پارس SPICE | `services/cir_to_spice/spice_parser.py` |
-| شماتیک backend | `services/schematic/schemdraw_generator.py` |
-| adapter فرانت‌اند | `frontend/src/lib/cir.js` (`UI_TO_CIR_TYPE`/`CIR_TO_UI_TYPE`) |
-| سمبل UI | `frontend/src/CircuitBuilder.jsx` (`renderSymbol`, `COMPONENT_TYPES`) |
+The **Analyze Circuit** button performs DC Operating Point analysis using:
+
+- PySpice
+- ngspice
+
+Docker images already include ngspice.
+
+For local Windows installations, install ngspice separately:
+
+https://ngspice.sourceforge.io
+
+or
+
+```bash
+conda install -c conda-forge ngspice
+```
+
+---
+
+# Current Limitations
+
+This research prototype currently supports:
+
+- Resistors
+- Capacitors
+- Inductors
+- Diodes
+- Voltage sources
+
+Advanced components such as:
+
+- Transistors
+- Operational amplifiers
+- Integrated circuits
+
+will be added in future versions.
+
+Currently every new AI prompt rebuilds the complete circuit rather than incrementally modifying the existing design.
+
+---
+
+# Roadmap
+
+Planned improvements include:
+
+- AI Circuit Improver
+- AC / Transient analysis
+- Better automatic schematic layout
+- Audio-to-Circuit
+- Image-to-Circuit
+- Online IoT Laboratory
+- Educational workflow improvements
+
+---
+
+# Research
+
+The associated research paper is currently under review on **arXiv**.
+
+The paper link will be added here once it becomes publicly available.
+
+---
+
+# Repository Notice
+
+This repository intentionally contains the original research prototype only.
+
+The actively maintained production version of **CircuPilot** is developed privately.
+
+---
+
+# For Developers
+
+When adding a new circuit component, synchronize updates across:
+
+| Layer | Files |
+|-------|-------|
+| CIR Schema | `core/cir/schema.py`, `pin_order.py` |
+| SPICE Generator | `services/cir_to_spice/basic_converter.py` |
+| SPICE Parser | `services/cir_to_spice/spice_parser.py` |
+| Backend Schematic | `services/schematic/schemdraw_generator.py` |
+| Frontend Adapter | `frontend/src/lib/cir.js` |
+| UI Symbols | `frontend/src/CircuitBuilder.jsx` |
+
+---
+
+# Citation
+
+If this repository contributes to your research, please consider citing the associated paper once it becomes publicly available.
+
+---
+
+# Copyright
+
+Copyright © 2026
+
+Ali Hedayati Pirouzan
+
+This repository is provided for research and educational purposes.
+
+Commercial use, redistribution, or inclusion in commercial software requires permission from the author.
